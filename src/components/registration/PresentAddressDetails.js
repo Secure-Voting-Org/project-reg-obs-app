@@ -1,0 +1,105 @@
+import React from 'react';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { useFormContext } from '../../context/FormContext';
+import ECILayout from './ECILayout';
+import SelectDropdown from '../common/SelectDropdown';
+import { locationData } from '../../data/locationData';
+
+const AddressField = ({ label, value, onChangeText, required = false }) => (
+    <View className="mb-4">
+        <Text className="text-sm font-semibold text-slate-700 mb-1">
+            {label} {required && <Text className="text-red-500">*</Text>}
+        </Text>
+        <TextInput
+            value={value}
+            onChangeText={onChangeText}
+            className="w-full border border-slate-300 rounded-lg px-3 py-3 text-slate-800 bg-white"
+        />
+    </View>
+);
+
+const PresentAddressDetails = ({ nextStep, prevStep }) => {
+    const { formData, updateFormData } = useFormContext();
+
+    const states = Object.keys(locationData);
+    const districts = formData.addressState && locationData[formData.addressState]
+        ? Object.keys(locationData[formData.addressState].districts)
+        : [];
+
+    const handleNext = () => {
+        const requiredFields = ['houseNo', 'streetClass', 'village', 'postOffice', 'pinCode', 'tehsil', 'addressState', 'addressDistrict'];
+        for (const field of requiredFields) {
+            if (!formData[field]) {
+                Alert.alert('Error', `Please fill all required address fields.`);
+                return;
+            }
+        }
+        if (!formData.addressProofFile) {
+            Alert.alert('Error', 'Please upload a document for proof of residence.');
+            return;
+        }
+
+        const fullAddress = `${formData.houseNo}, ${formData.streetClass}, ${formData.village}, ${formData.postOffice}, ${formData.tehsil}, ${formData.addressDistrict}, ${formData.addressState} - ${formData.pinCode}`;
+        updateFormData({ address: fullAddress });
+        nextStep();
+    };
+
+    const handleMockUpload = () => {
+        updateFormData({ addressProofFile: { name: 'address_proof.pdf', base64: 'mock_base64_data' } });
+        Alert.alert('Success', 'Address Document attached successfully (Mocked).');
+    };
+
+    return (
+        <ECILayout step={8} totalSteps={14} title="H. Present Address Details" onClose={prevStep}>
+            <View className="gap-4">
+                <Text className="text-sm font-bold text-slate-800 mb-2">8(a) Present Ordinary Residence (Full Address)</Text>
+
+                <AddressField label="House/Building/Apartment No" value={formData.houseNo} onChangeText={(val) => updateFormData({ houseNo: val })} required />
+                <AddressField label="Street/Area/Locality/Road" value={formData.streetClass} onChangeText={(val) => updateFormData({ streetClass: val })} required />
+                <AddressField label="Village/Town" value={formData.village} onChangeText={(val) => updateFormData({ village: val })} required />
+                <AddressField label="Post Office" value={formData.postOffice} onChangeText={(val) => updateFormData({ postOffice: val })} required />
+                <AddressField label="PIN Code" value={formData.pinCode} onChangeText={(val) => updateFormData({ pinCode: val })} required />
+                <AddressField label="Tehsil/Taluqa/Mandal" value={formData.tehsil} onChangeText={(val) => updateFormData({ tehsil: val })} required />
+
+                <SelectDropdown
+                    label="State/UT"
+                    value={formData.addressState}
+                    options={states}
+                    onSelect={(state) => updateFormData({ addressState: state, addressDistrict: '' })}
+                    placeholder="Select State"
+                    required
+                />
+
+                <SelectDropdown
+                    label="District"
+                    value={formData.addressDistrict}
+                    options={districts}
+                    onSelect={(district) => updateFormData({ addressDistrict: district })}
+                    placeholder="Select District"
+                    disabled={!formData.addressState}
+                    required
+                />
+
+                <Text className="text-sm font-bold text-slate-800 mt-4 mb-2">8(b) Self-attested copy of address proof *</Text>
+                <View className="border-2 border-dashed border-slate-300 rounded-xl p-6 items-center">
+                    <TouchableOpacity onPress={handleMockUpload} className="bg-slate-200 px-4 py-2 rounded-lg mb-2">
+                        <Text className="font-medium text-slate-700">Choose File</Text>
+                    </TouchableOpacity>
+                    <Text className="text-slate-500 text-center" numberOfLines={1}>
+                        {formData.addressProofFile ? formData.addressProofFile.name : 'No file chosen (PDF, JPG, PNG)'}
+                    </Text>
+                </View>
+
+                <View className="mt-8 flex-row justify-between">
+                    <TouchableOpacity onPress={prevStep} className="border border-blue-600 px-6 py-3 rounded-lg">
+                        <Text className="text-blue-600 font-bold">Previous</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleNext} className="bg-blue-600 px-6 py-3 rounded-lg">
+                        <Text className="text-white font-bold">Next</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </ECILayout>
+    );
+};
+export default PresentAddressDetails;

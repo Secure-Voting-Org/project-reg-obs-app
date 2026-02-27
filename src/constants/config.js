@@ -1,7 +1,15 @@
 import { Platform } from 'react-native';
-// Replace with actual backend IP/URL when running on device
-// Use the computer's LAN IP address for Expo Go mobile testing.
-export const BASE_URL = Platform.OS === 'web' ? 'http://localhost:5000' : 'http://10.12.233.152:5000';
+
+// In production (Render deploy): set EXPO_PUBLIC_API_URL in Render dashboard.
+// In local dev: leave EXPO_PUBLIC_API_URL unset — falls back to localhost automatically.
+const RENDER_URL = process.env.EXPO_PUBLIC_API_URL;
+
+export const BASE_URL = RENDER_URL
+    ? RENDER_URL
+    : (Platform.OS === 'web'
+        ? 'http://localhost:5000'          // Local web browser dev
+        : 'http://10.12.233.152:5000');    // Expo Go on mobile (LAN IP)
+
 export const API_URL = BASE_URL; // Alias used in LoginScreen.js
 
 export const ENDPOINTS = {

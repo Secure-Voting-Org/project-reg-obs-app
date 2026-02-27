@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { API_URL } from '../../constants/config';
 
-const LedgerView = ({ setView }) => {
+const LedgerView = () => {
     const [blocks, setBlocks] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -32,9 +32,6 @@ const LedgerView = ({ setView }) => {
             <View className="p-6 pb-2">
                 <View className="flex-row items-center justify-between mb-4 mt-4">
                     <Text className="text-2xl font-bold text-slate-800">Public Ledger</Text>
-                    <TouchableOpacity onPress={() => setView('hub')} className="bg-slate-200 px-4 py-2 rounded-lg">
-                        <Text className="font-medium text-slate-700">Back</Text>
-                    </TouchableOpacity>
                 </View>
 
                 <View className="bg-green-100 flex-row items-center border border-green-200 self-start px-3 py-1 rounded-lg mb-6 shadow-sm">

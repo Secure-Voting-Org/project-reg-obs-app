@@ -3,15 +3,22 @@ import { View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, P
 import { LinearGradient } from 'expo-linear-gradient';
 import { styled } from 'nativewind';
 import { API_URL } from '../constants/config';
+import { useAccounts } from '../context/AccountContext';
 
 const StyledLinearGradient = styled(LinearGradient);
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({ navigation, route }) => {
+    const { addOrUpdateAccount } = useAccounts();
+    const addingAccount = route?.params?.addingAccount || false;
     // Mode toggles
     const [appRole, setAppRole] = useState('citizen'); // 'citizen' or 'observer'
     const [isLoginMode, setIsLoginMode] = useState(true);
     const [observerRole, setObserverRole] = useState('general'); // 'general' or 'expenditure'
     const [loading, setLoading] = useState(false);
+    const [uiError, setUiError] = useState(''); // Inline error message
+    const [forgotPasswordStep, setForgotPasswordStep] = useState(0); // 0=Off, 1=Email, 2=OTP, 3=New Password
+    const [otp, setOtp] = useState('');
+    const [newPassword, setNewPassword] = useState('');
 
     const [formData, setFormData] = useState({
         fullName: '',
@@ -22,10 +29,12 @@ const LoginScreen = ({ navigation }) => {
     });
 
     const handleChange = (name, value) => {
+        setUiError(''); // Clear error on typing
         setFormData({ ...formData, [name]: value });
     };
 
     const handleCitizenSubmit = async () => {
+        setUiError('');
         setLoading(true);
         const endpoint = isLoginMode ? '/api/voter/login' : '/api/voter/signup';
         const url = (API_URL || 'http://localhost:5000') + endpoint;
@@ -51,29 +60,37 @@ const LoginScreen = ({ navigation }) => {
                     return;
                 }
 
-                // Navigate to dashboard automatically on successful login
-                navigation.replace('Dashboard', {
-                    user: { name: res.user?.name || 'Citizen', ...res.user, appRole: 'citizen' }
-                });
+                // Save session and navigate to dashboard
+                const userData = { name: res.user?.name || 'Citizen', ...res.user };
+                await addOrUpdateAccount(userData, 'citizen');
+                navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
             } else {
+                setUiError(res.error || "Authentication failed");
                 Alert.alert("Error", res.error || "Authentication failed");
             }
         } catch (e) {
-            Alert.alert("Network Error", "Unable to connect to server.");
+            setUiError("Network Error. Unable to connect to server.");
+            console.error("Login Error:", e);
         }
         setLoading(false);
     };
 
     const handleObserverSubmit = async () => {
+        setUiError('');
         setLoading(true);
-        const url = (API_URL || 'http://localhost:5000') + '/api/observer/login';
+        const endpoint = isLoginMode ? '/api/observer/login' : '/api/observer/register';
+        const url = (API_URL || 'http://localhost:5000') + endpoint;
 
         try {
-            const payload = {
-                username: formData.username,
-                password: formData.password,
-                role: observerRole // general or expenditure
-            };
+            const payload = isLoginMode
+                ? { username: formData.username, password: formData.password, role: observerRole }
+                : {
+                    username: formData.username,
+                    password: formData.password,
+                    fullName: formData.fullName,
+                    email: formData.email,
+                    role: observerRole
+                };
 
             const req = await fetch(url, {
                 method: 'POST',
@@ -84,39 +101,144 @@ const LoginScreen = ({ navigation }) => {
             const res = await req.json();
 
             if (req.ok && res.success) {
-                navigation.replace('Dashboard', {
-                    user: {
-                        name: res.observer.full_name || res.observer.username,
-                        ...res.observer,
-                        appRole: 'observer'
-                    }
-                });
+                if (!isLoginMode) {
+                    Alert.alert("Success", "Observer registered successfully. Please login.");
+                    setIsLoginMode(true);
+                    setLoading(false);
+                    return;
+                }
+
+                const userData = { name: res.observer.full_name || res.observer.username, ...res.observer };
+                await addOrUpdateAccount(userData, 'observer');
+                navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
             } else {
+                setUiError(res.error || "Authentication failed");
                 Alert.alert("Error", res.error || "Authentication failed");
             }
         } catch (e) {
-            Alert.alert("Network Error", "Unable to connect to server.");
+            setUiError("Network Error. Unable to connect to server.");
+            console.error("Login Error:", e);
+        }
+        setLoading(false);
+    };
+
+    const handleSendOTP = async () => {
+        if (!formData.email) return Alert.alert("Error", "Please enter your email");
+        setLoading(true);
+        const endpoint = appRole === 'citizen' ? '/api/voter/forgot-password' : '/api/observer/forgot-password';
+        const url = (API_URL || 'http://localhost:5000') + endpoint;
+
+        try {
+            const req = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email })
+            });
+            const res = await req.json();
+            if (req.ok && res.success) {
+                setForgotPasswordStep(2);
+                Alert.alert("Success", res.message || "OTP sent to your email.");
+            } else {
+                setUiError(res.error || "Failed to send OTP");
+            }
+        } catch (e) {
+            setUiError("Network Error. Unable to connect to server.");
+        }
+        setLoading(false);
+    };
+
+    const handleVerifyOTP = async () => {
+        setUiError('');
+        if (!otp) {
+            setUiError("Please enter the OTP");
+            return;
+        }
+        setLoading(true);
+        const endpoint = appRole === 'citizen' ? '/api/voter/verify-otp' : '/api/observer/verify-otp';
+        const url = (API_URL || 'http://localhost:5000') + endpoint;
+
+        try {
+            const req = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email, otp })
+            });
+            const res = await req.json();
+            if (req.ok && res.success) {
+                setForgotPasswordStep(3);
+                Alert.alert("Success", "OTP Verified. Please enter new password.");
+            } else {
+                setUiError(res.error || "Invalid OTP");
+            }
+        } catch (e) {
+            setUiError("Network Error. Unable to connect to server.");
+        }
+        setLoading(false);
+    };
+
+    const handleResetPassword = async () => {
+        setUiError('');
+        if (!newPassword) {
+            setUiError("Please enter a new password");
+            return;
+        }
+        setLoading(true);
+        const endpoint = appRole === 'citizen' ? '/api/voter/reset-password' : '/api/observer/reset-password';
+        const url = (API_URL || 'http://localhost:5000') + endpoint;
+
+        try {
+            const req = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email, newPassword })
+            });
+            const res = await req.json();
+            if (req.ok && res.success) {
+                Alert.alert("Success", "Password reset successfully. You can now login.");
+                setForgotPasswordStep(0);
+                setIsLoginMode(true);
+            } else {
+                setUiError(res.error || "Failed to reset password");
+            }
+        } catch (e) {
+            setUiError("Network Error. Unable to connect to server.");
         }
         setLoading(false);
     };
 
     const handleSubmit = () => {
+        setUiError('');
         // Validation
         if (appRole === 'citizen') {
             if (isLoginMode) {
-                if (!formData.phone || !formData.password) return Alert.alert('Error', 'Mobile and Password required');
+                if (!formData.phone || !formData.password) {
+                    setUiError('Mobile and Password are required');
+                    return;
+                }
             } else {
-                if (!formData.fullName || !formData.phone || !formData.email || !formData.password)
-                    return Alert.alert('Error', 'All fields required');
+                if (!formData.fullName || !formData.phone || !formData.email || !formData.password) {
+                    setUiError('All fields are required');
+                    return;
+                }
             }
             handleCitizenSubmit();
         } else {
-            if (!formData.username || !formData.password) return Alert.alert('Error', 'Username and Password required');
+            if (isLoginMode) {
+                if (!formData.username || !formData.password) {
+                    setUiError('Username and Password are required');
+                    return;
+                }
+            } else {
+                if (!formData.fullName || !formData.username || !formData.email || !formData.password) {
+                    setUiError('All fields are required');
+                    return;
+                }
+            }
             handleObserverSubmit();
         }
     };
 
-    const toggleCitizenMode = () => {
+    const toggleMode = () => {
         setIsLoginMode(!isLoginMode);
     };
 
@@ -162,119 +284,197 @@ const LoginScreen = ({ navigation }) => {
 
                         <View className="p-6">
 
-                            {/* Observer Sub-Role Toggle */}
-                            {appRole === 'observer' && (
-                                <View className="flex-row gap-2 mb-4 justify-center">
-                                    <TouchableOpacity
-                                        onPress={() => setObserverRole('general')}
-                                        className={`px-4 py-2 border rounded-full ${observerRole === 'general' ? 'bg-orange-100 border-orange-400' : 'border-slate-300 bg-white'}`}
-                                    >
-                                        <Text className={`text-sm font-bold ${observerRole === 'general' ? 'text-orange-700' : 'text-slate-500'}`}>General</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => setObserverRole('expenditure')}
-                                        className={`px-4 py-2 border rounded-full ${observerRole === 'expenditure' ? 'bg-orange-100 border-orange-400' : 'border-slate-300 bg-white'}`}
-                                    >
-                                        <Text className={`text-sm font-bold ${observerRole === 'expenditure' ? 'text-orange-700' : 'text-slate-500'}`}>Expenditure</Text>
-                                    </TouchableOpacity>
+                            {/* Inline Error Display */}
+                            {uiError ? (
+                                <View className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
+                                    <Text className="text-red-700 font-medium">{uiError}</Text>
+                                </View>
+                            ) : null}
+
+                            {/* Forgot Password Flow Overlay */}
+                            {forgotPasswordStep > 0 && (
+                                <View className="mb-4">
+                                    {forgotPasswordStep === 1 && (
+                                        <View>
+                                            <Text className="text-lg font-bold text-slate-800 mb-2">Reset Password</Text>
+                                            <Text className="text-slate-500 mb-4">Enter your {appRole} email address to receive a verification code.</Text>
+                                            <Text className="text-sm font-medium text-slate-700 mb-1">Email Address</Text>
+                                            <TextInput
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 focus:border-blue-500 mb-4"
+                                                placeholder="Enter your email"
+                                                keyboardType="email-address"
+                                                value={formData.email}
+                                                onChangeText={(text) => handleChange('email', text)}
+                                                autoCapitalize="none"
+                                            />
+                                            <View className="flex-row gap-3">
+                                                <TouchableOpacity onPress={() => setForgotPasswordStep(0)} className="flex-1 py-4 border border-slate-300 rounded-xl items-center bg-white"><Text className="text-slate-700 font-medium">Cancel</Text></TouchableOpacity>
+                                                <TouchableOpacity onPress={handleSendOTP} disabled={loading} className="flex-1 py-4 bg-blue-600 rounded-xl items-center"><Text className="text-white font-bold">{loading ? 'Sending...' : 'Send OTP'}</Text></TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    )}
+                                    {forgotPasswordStep === 2 && (
+                                        <View>
+                                            <Text className="text-lg font-bold text-slate-800 mb-2">Verify OTP</Text>
+                                            <Text className="text-slate-500 mb-4">Enter the 6-digit code sent to {formData.email}</Text>
+                                            <TextInput
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 focus:border-blue-500 mb-4 text-center tracking-widest text-2xl"
+                                                placeholder="------"
+                                                keyboardType="numeric"
+                                                maxLength={6}
+                                                value={otp}
+                                                onChangeText={setOtp}
+                                            />
+                                            <View className="flex-row gap-3">
+                                                <TouchableOpacity onPress={() => setForgotPasswordStep(0)} className="flex-1 py-4 border border-slate-300 rounded-xl items-center bg-white"><Text className="text-slate-700 font-medium">Cancel</Text></TouchableOpacity>
+                                                <TouchableOpacity onPress={handleVerifyOTP} disabled={loading} className="flex-1 py-4 bg-blue-600 rounded-xl items-center"><Text className="text-white font-bold">{loading ? 'Verifying...' : 'Verify OTP'}</Text></TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    )}
+                                    {forgotPasswordStep === 3 && (
+                                        <View>
+                                            <Text className="text-lg font-bold text-slate-800 mb-2">Set New Password</Text>
+                                            <Text className="text-slate-500 mb-4">Please create a strong new password.</Text>
+                                            <TextInput
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 focus:border-blue-500 mb-4"
+                                                placeholder="Enter new password"
+                                                secureTextEntry={true}
+                                                value={newPassword}
+                                                onChangeText={setNewPassword}
+                                            />
+                                            <View className="flex-row gap-3">
+                                                <TouchableOpacity onPress={() => setForgotPasswordStep(0)} className="flex-1 py-4 border border-slate-300 rounded-xl items-center bg-white"><Text className="text-slate-700 font-medium">Cancel</Text></TouchableOpacity>
+                                                <TouchableOpacity onPress={handleResetPassword} disabled={loading} className="flex-1 py-4 bg-blue-600 rounded-xl items-center"><Text className="text-white font-bold">{loading ? 'Saving...' : 'Reset Password'}</Text></TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    )}
                                 </View>
                             )}
 
-                            {/* Registration Fields (Citizen Only) */}
-                            {appRole === 'citizen' && !isLoginMode && (
+                            {/* Standard Form Area */}
+                            {forgotPasswordStep === 0 && (
                                 <>
-                                    <View>
-                                        <Text className="text-sm font-medium text-slate-700 mb-1">Full Name</Text>
+                                    {/* Observer Sub-Role Toggle */}
+                                    {appRole === 'observer' && (
+                                        <View className="flex-row gap-2 mb-4 justify-center">
+                                            <TouchableOpacity
+                                                onPress={() => setObserverRole('general')}
+                                                className={`px-4 py-2 border rounded-full ${observerRole === 'general' ? 'bg-orange-100 border-orange-400' : 'border-slate-300 bg-white'}`}
+                                            >
+                                                <Text className={`text-sm font-bold ${observerRole === 'general' ? 'text-orange-700' : 'text-slate-500'}`}>General</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                onPress={() => setObserverRole('expenditure')}
+                                                className={`px-4 py-2 border rounded-full ${observerRole === 'expenditure' ? 'bg-orange-100 border-orange-400' : 'border-slate-300 bg-white'}`}
+                                            >
+                                                <Text className={`text-sm font-bold ${observerRole === 'expenditure' ? 'text-orange-700' : 'text-slate-500'}`}>Expenditure</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+
+                                    {/* Registration Fields */}
+                                    {!isLoginMode && (
+                                        <>
+                                            <View>
+                                                <Text className="text-sm font-medium text-slate-700 mb-1">Full Name</Text>
+                                                <TextInput
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 focus:border-blue-500"
+                                                    placeholder="Enter your full name"
+                                                    value={formData.fullName}
+                                                    onChangeText={(text) => handleChange('fullName', text)}
+                                                />
+                                            </View>
+                                            <View className="mt-4">
+                                                <Text className="text-sm font-medium text-slate-700 mb-1">Email Address</Text>
+                                                <TextInput
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 focus:border-blue-500"
+                                                    placeholder="Enter your email"
+                                                    keyboardType="email-address"
+                                                    value={formData.email}
+                                                    onChangeText={(text) => handleChange('email', text)}
+                                                    autoCapitalize="none"
+                                                />
+                                            </View>
+                                        </>
+                                    )}
+
+                                    {/* Identifier Field */}
+                                    <View className="mt-4">
+                                        <Text className="text-sm font-medium text-slate-700 mb-1">{appRole === 'citizen' ? 'Mobile Number' : 'Username'}</Text>
                                         <TextInput
                                             className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 focus:border-blue-500"
-                                            placeholder="Enter your full name"
-                                            value={formData.fullName}
-                                            onChangeText={(text) => handleChange('fullName', text)}
+                                            placeholder={appRole === 'citizen' ? "Enter 10-digit mobile number" : "e.g. observer1"}
+                                            keyboardType={appRole === 'citizen' ? "phone-pad" : "default"}
+                                            maxLength={appRole === 'citizen' ? 10 : 50}
+                                            value={appRole === 'citizen' ? formData.phone : formData.username}
+                                            autoCapitalize="none"
+                                            onChangeText={(text) => handleChange(appRole === 'citizen' ? 'phone' : 'username', text)}
                                         />
                                     </View>
+
                                     <View className="mt-4">
-                                        <Text className="text-sm font-medium text-slate-700 mb-1">Email Address</Text>
+                                        <Text className="text-sm font-medium text-slate-700 mb-1">Password</Text>
                                         <TextInput
                                             className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 focus:border-blue-500"
-                                            placeholder="Enter your email"
-                                            keyboardType="email-address"
-                                            value={formData.email}
-                                            onChangeText={(text) => handleChange('email', text)}
-                                            autoCapitalize="none"
+                                            placeholder="Enter your password"
+                                            secureTextEntry={true}
+                                            value={formData.password}
+                                            onChangeText={(text) => handleChange('password', text)}
                                         />
+                                        {isLoginMode && (
+                                            <TouchableOpacity onPress={() => setForgotPasswordStep(1)} className="mt-2 items-end">
+                                                <Text className={`text-sm font-medium ${appRole === 'citizen' ? 'text-blue-600' : 'text-orange-600'}`}>Forgot Password?</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
+
+                                    {/* Action Buttons */}
+                                    <View className="flex-row gap-3 items-center mt-8">
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                if (forgotPasswordStep > 0) {
+                                                    setForgotPasswordStep(0); // If in forgot pw overlay, go back to login
+                                                } else if (!isLoginMode) {
+                                                    setIsLoginMode(true); // If registering, go back to login
+                                                } else {
+                                                    navigation.goBack(); // If on root login, go back to home/landing
+                                                }
+                                            }}
+                                            className="flex-1 py-4 border border-slate-300 rounded-xl items-center bg-white shadow-sm"
+                                        >
+                                            <Text className="text-slate-700 font-medium text-lg">Back</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            onPress={handleSubmit}
+                                            disabled={loading}
+                                            className="flex-1"
+                                        >
+                                            <StyledLinearGradient
+                                                colors={appRole === 'citizen' ? ['#4F46E5', '#3730A3'] : ['#EA580C', '#C2410C']}
+                                                start={{ x: 0, y: 0 }}
+                                                end={{ x: 1, y: 0 }}
+                                                className={`py-4 rounded-xl items-center shadow-md ${loading ? 'opacity-70' : ''}`}
+                                            >
+                                                <Text className="text-white font-bold text-lg">
+                                                    {loading ? 'Processing...' : (isLoginMode ? 'Login' : 'Register')}
+                                                </Text>
+                                            </StyledLinearGradient>
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {/* Toggle Mode */}
+                                    <View className="mt-6 flex-row justify-center items-center">
+                                        <Text className="text-slate-500">
+                                            {isLoginMode ? "Don't have an account? " : "Already have an account? "}
+                                        </Text>
+                                        <TouchableOpacity onPress={toggleMode}>
+                                            <Text className="text-blue-600 font-bold ml-1">
+                                                {isLoginMode ? 'Register Here' : 'Login Here'}
+                                            </Text>
+                                        </TouchableOpacity>
                                     </View>
                                 </>
-                            )}
-
-                            {/* Identifier Field */}
-                            <View className="mt-4">
-                                <Text className="text-sm font-medium text-slate-700 mb-1">{appRole === 'citizen' ? 'Mobile Number' : 'Username'}</Text>
-                                <TextInput
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 focus:border-blue-500"
-                                    placeholder={appRole === 'citizen' ? "Enter 10-digit mobile number" : "e.g. observer1"}
-                                    keyboardType={appRole === 'citizen' ? "phone-pad" : "default"}
-                                    maxLength={appRole === 'citizen' ? 10 : 50}
-                                    value={appRole === 'citizen' ? formData.phone : formData.username}
-                                    autoCapitalize="none"
-                                    onChangeText={(text) => handleChange(appRole === 'citizen' ? 'phone' : 'username', text)}
-                                />
-                            </View>
-
-                            <View className="mt-4">
-                                <Text className="text-sm font-medium text-slate-700 mb-1">Password</Text>
-                                <TextInput
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 focus:border-blue-500"
-                                    placeholder="Enter your password"
-                                    secureTextEntry
-                                    value={formData.password}
-                                    onChangeText={(text) => handleChange('password', text)}
-                                />
-                                {isLoginMode && (
-                                    <TouchableOpacity className="mt-2 items-end">
-                                        <Text className={`text-sm font-medium ${appRole === 'citizen' ? 'text-blue-600' : 'text-orange-600'}`}>Forgot Password?</Text>
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-
-                            {/* Action Buttons */}
-                            <View className="flex-row gap-3 items-center mt-8">
-                                <TouchableOpacity
-                                    onPress={() => navigation.goBack()}
-                                    className="flex-1 py-4 border border-slate-300 rounded-xl items-center bg-white shadow-sm"
-                                >
-                                    <Text className="text-slate-700 font-medium text-lg">Cancel</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    onPress={handleSubmit}
-                                    disabled={loading}
-                                    className="flex-1"
-                                >
-                                    <StyledLinearGradient
-                                        colors={appRole === 'citizen' ? ['#4F46E5', '#3730A3'] : ['#EA580C', '#C2410C']}
-                                        start={{ x: 0, y: 0 }}
-                                        end={{ x: 1, y: 0 }}
-                                        className={`py-4 rounded-xl items-center shadow-md ${loading ? 'opacity-70' : ''}`}
-                                    >
-                                        <Text className="text-white font-bold text-lg">
-                                            {loading ? 'Processing...' : (isLoginMode ? 'Login' : 'Register')}
-                                        </Text>
-                                    </StyledLinearGradient>
-                                </TouchableOpacity>
-                            </View>
-
-                            {/* Toggle Mode (Citizen Only) */}
-                            {appRole === 'citizen' && (
-                                <View className="mt-6 flex-row justify-center items-center">
-                                    <Text className="text-slate-500">
-                                        {isLoginMode ? "Don't have an account? " : "Already have an account? "}
-                                    </Text>
-                                    <TouchableOpacity onPress={toggleCitizenMode}>
-                                        <Text className="text-blue-600 font-bold ml-1">
-                                            {isLoginMode ? 'Register Here' : 'Login Here'}
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
                             )}
 
                         </View>

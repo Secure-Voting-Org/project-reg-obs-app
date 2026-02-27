@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { API_URL } from '../../constants/config';
 
-const VoteVerification = ({ setView }) => {
+const VoteVerification = () => {
     const [receiptHash, setReceiptHash] = useState('');
     const [result, setResult] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -45,9 +45,6 @@ const VoteVerification = ({ setView }) => {
             <View className="p-6">
                 <View className="flex-row items-center justify-between mb-2 mt-4">
                     <Text className="text-2xl font-bold text-slate-800">Vote Verification</Text>
-                    <TouchableOpacity onPress={() => setView('hub')} className="bg-slate-200 px-4 py-2 rounded-lg">
-                        <Text className="font-medium text-slate-700">Back</Text>
-                    </TouchableOpacity>
                 </View>
                 <Text className="text-slate-500 mb-8">Enter a vote receipt transaction hash to cryptographically verify it was recorded on the ledger.</Text>
 

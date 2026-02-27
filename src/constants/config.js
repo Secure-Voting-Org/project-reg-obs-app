@@ -1,10 +1,19 @@
+import { Platform } from 'react-native';
 // Replace with actual backend IP/URL when running on device
 // Use the computer's LAN IP address for Expo Go mobile testing.
-export const BASE_URL = 'http://10.163.32.233:5000';
+export const BASE_URL = Platform.OS === 'web' ? 'http://localhost:5000' : 'http://10.12.233.152:5000';
 export const API_URL = BASE_URL; // Alias used in LoginScreen.js
 
 export const ENDPOINTS = {
     OBSERVER_LOGIN: `${BASE_URL}/api/observer/login`,
+    OBSERVER_REGISTER: `${BASE_URL}/api/observer/register`,
+    OBSERVER_FORGOT_PW: `${BASE_URL}/api/observer/forgot-password`,
+    OBSERVER_VERIFY_OTP: `${BASE_URL}/api/observer/verify-otp`,
+    OBSERVER_RESET_PW: `${BASE_URL}/api/observer/reset-password`,
+
     VOTER_LOGIN: `${BASE_URL}/api/voter/login`,
     VOTER_REGISTER: `${BASE_URL}/api/voter/signup`,
+    VOTER_FORGOT_PW: `${BASE_URL}/api/voter/forgot-password`,
+    VOTER_VERIFY_OTP: `${BASE_URL}/api/voter/verify-otp`,
+    VOTER_RESET_PW: `${BASE_URL}/api/voter/reset-password`,
 };

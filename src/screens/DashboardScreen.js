@@ -1,134 +1,175 @@
-import React, { useState } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useAccounts } from '../context/AccountContext';
 import { LinearGradient } from 'expo-linear-gradient';
-import { styled } from 'nativewind';
-import DashboardHub from '../components/observer/DashboardHub';
 
-const StyledLinearGradient = styled(LinearGradient);
+// Citizen screens
+import CitizenHomeScreen from './dashboard/CitizenHomeScreen';
+import RegisterScreen from './RegisterScreen';
+import TrackStatusScreen from './TrackStatusScreen';
+
+// Observer screens
+import ObserverHomeScreen from './dashboard/ObserverHomeScreen';
 import RealTimeView from '../components/observer/RealTimeView';
 import LedgerView from '../components/observer/LedgerView';
 import ReportsView from '../components/observer/ReportsView';
-import VoteVerification from '../components/observer/VoteVerification';
 
-const DashboardScreen = ({ route, navigation }) => {
-    // Expected: { user: { name: '...', appRole: 'citizen' | 'observer', ... } }
-    const { user } = route.params || { user: { name: 'User Profile', appRole: 'citizen' } };
-    const appRole = user?.appRole || 'citizen';
+const Tab = createBottomTabNavigator();
 
-    // View state: 'menu' (default portal), 'hub', 'realtime', 'ledger', 'reports', 'verify'
-    const [view, setView] = useState('menu');
+const getInitials = (name = '') =>
+    name.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('') || '?';
 
-    // Portal Menu View
-    if (view === 'menu') {
-        return (
-            <SafeAreaView className="flex-1 bg-slate-50">
-                <ScrollView contentContainerStyle={{ padding: 24 }}>
-                    <View>
-                        {/* Header Area */}
-                        <View className="mb-8 mt-4">
-                            <Text className="text-3xl font-bold text-slate-800">
-                                Welcome, {user?.name || 'User'}
-                            </Text>
-                            <Text className="text-slate-500 mt-1">
-                                {appRole === 'observer'
-                                    ? 'Select an observer module below to monitor elections.'
-                                    : 'Select a portal service below to continue.'}
-                            </Text>
-                            {appRole === 'observer' && (
-                                <View className="mt-2 bg-orange-100 self-start px-3 py-1 rounded-full border border-orange-200">
-                                    <Text className="text-orange-800 text-xs font-bold uppercase">{user?.role || 'General'} Observer</Text>
-                                </View>
-                            )}
-                        </View>
+// Shared header bar component
+const DashboardHeader = ({ navigation, title, accentColor }) => {
+    const { activeAccount, accounts, activeIndex, switchAccount } = useAccounts();
+    const user = activeAccount?.user;
+    const initials = getInitials(user?.name || user?.full_name || user?.username || '');
+    const otherAccount = accounts.find((_, i) => i !== activeIndex);
 
-                        {/* Citizen: Voter Services Section */}
-                        {appRole === 'citizen' && (
-                            <>
-                                <Text className="text-lg font-bold text-slate-700 mb-4 px-1">Voter Services</Text>
-                                <View className="gap-4 mb-8">
-                                    <TouchableOpacity
-                                        onPress={() => navigation.navigate('Register')}
-                                        className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex-row items-center justify-between"
-                                    >
-                                        <View className="flex-1">
-                                            <View className="w-12 h-12 bg-blue-100 rounded-full items-center justify-center mb-4">
-                                                <Text className="text-2xl">📝</Text>
-                                            </View>
-                                            <Text className="text-xl font-bold text-slate-800 mb-1">New Registration</Text>
-                                            <Text className="text-slate-500 text-sm">Enroll as a new voter or update demographics</Text>
-                                        </View>
-                                        <Text className="text-slate-300 text-3xl ml-4">→</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        onPress={() => navigation.navigate('TrackStatus')}
-                                        className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex-row items-center justify-between"
-                                    >
-                                        <View className="flex-1">
-                                            <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center mb-4">
-                                                <Text className="text-2xl">🔍</Text>
-                                            </View>
-                                            <Text className="text-xl font-bold text-slate-800 mb-1">Track Status</Text>
-                                            <Text className="text-slate-500 text-sm">Check the approval status of your application</Text>
-                                        </View>
-                                        <Text className="text-slate-300 text-3xl ml-4">→</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </>
-                        )}
-
-                        {/* Observer Tools Section */}
-                        {appRole === 'observer' && (
-                            <>
-                                <Text className="text-lg font-bold text-slate-700 mb-4 px-1">Observer Tools</Text>
-                                <View className="gap-4 mb-8">
-                                    <TouchableOpacity
-                                        onPress={() => setView('hub')}
-                                    >
-                                        <StyledLinearGradient
-                                            colors={['#F97316', '#EA580C']}
-                                            start={{ x: 0, y: 0 }}
-                                            end={{ x: 1, y: 0 }}
-                                            className="rounded-2xl shadow-md p-6 flex-row items-center justify-between"
-                                        >
-                                            <View className="flex-1">
-                                                <View className="w-12 h-12 rounded-full items-center justify-center mb-4" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
-                                                    <Text className="text-2xl">📊</Text>
-                                                </View>
-                                                <Text className="text-xl font-bold text-white mb-1">Observer Dashboard</Text>
-                                                <Text className="text-orange-100 text-sm">Access analytics, ledgers, and polling reports</Text>
-                                            </View>
-                                            <Text className="text-3xl ml-4" style={{ color: 'rgba(255,255,255,0.5)' }}>→</Text>
-                                        </StyledLinearGradient>
-                                    </TouchableOpacity>
-                                </View>
-                            </>
-                        )}
-
-                        {/* Logout */}
-                        <TouchableOpacity
-                            onPress={() => navigation.replace('Login')}
-                            className="mt-6 p-4 items-center bg-white border border-red-100 rounded-xl"
-                        >
-                            <Text className="text-red-500 font-bold">Logout</Text>
-                        </TouchableOpacity>
-
-                    </View>
-                </ScrollView>
-            </SafeAreaView>
-        );
-    }
-
-    // Observer Views Route handling
     return (
-        <SafeAreaView className="flex-1 bg-slate-50">
-            {view === 'hub' && <DashboardHub setView={setView} observer={user} />}
-            {view === 'realtime' && <RealTimeView setView={setView} />}
-            {view === 'ledger' && <LedgerView setView={setView} />}
-            {view === 'reports' && <ReportsView setView={setView} />}
-            {view === 'verify' && <VoteVerification setView={setView} />}
-        </SafeAreaView>
+        <LinearGradient colors={[accentColor, accentColor + 'DD']} style={styles.header}>
+            <View>
+                <Text style={styles.headerLabel}>Welcome back</Text>
+                <Text style={styles.headerName} numberOfLines={1}>
+                    {user?.name || user?.full_name || user?.username || 'User'}
+                </Text>
+            </View>
+            <View style={styles.headerRight}>
+                {/* Switch account pill */}
+                {otherAccount && (
+                    <TouchableOpacity
+                        style={styles.switchPill}
+                        onPress={() => switchAccount(accounts.indexOf(otherAccount))}
+                    >
+                        <Text style={styles.switchPillText}>
+                            {otherAccount.appRole === 'citizen' ? '🗳️' : '👁️'} Switch
+                        </Text>
+                    </TouchableOpacity>
+                )}
+                {/* Profile avatar */}
+                <TouchableOpacity
+                    style={[styles.avatarBtn, { backgroundColor: 'rgba(255,255,255,0.25)' }]}
+                    onPress={() => navigation.navigate('Profile')}
+                >
+                    <Text style={styles.avatarText}>{initials}</Text>
+                </TouchableOpacity>
+            </View>
+        </LinearGradient>
     );
 };
 
+// Tab icon helper
+const TabIcon = ({ emoji, label, focused, color }) => (
+    <View style={styles.tabIcon}>
+        <Text style={[styles.tabEmoji, { opacity: focused ? 1 : 0.55 }]}>{emoji}</Text>
+        <Text style={[styles.tabLabel, { color }]}>{label}</Text>
+    </View>
+);
+
+// ──────────────────────────────
+// CITIZEN DASHBOARD
+// ──────────────────────────────
+const CitizenDashboard = ({ navigation }) => (
+    <View style={{ flex: 1 }}>
+        <DashboardHeader navigation={navigation} title="Voter Portal" accentColor="#2563EB" />
+        <Tab.Navigator
+            screenOptions={{
+                headerShown: false,
+                tabBarStyle: styles.tabBar,
+                tabBarActiveTintColor: '#2563EB',
+                tabBarInactiveTintColor: '#94A3B8',
+                tabBarShowLabel: false,
+            }}
+        >
+            <Tab.Screen
+                name="CitizenHome"
+                component={CitizenHomeScreen}
+                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="🏠" label="Home" focused={focused} color={color} /> }}
+            />
+            <Tab.Screen
+                name="Register"
+                component={RegisterScreen}
+                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="📝" label="Register" focused={focused} color={color} /> }}
+            />
+            <Tab.Screen
+                name="TrackStatus"
+                component={TrackStatusScreen}
+                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="🔍" label="Track" focused={focused} color={color} /> }}
+            />
+        </Tab.Navigator>
+    </View>
+);
+
+// ──────────────────────────────
+// OBSERVER DASHBOARD
+// ──────────────────────────────
+const ObserverDashboard = ({ navigation }) => (
+    <View style={{ flex: 1 }}>
+        <DashboardHeader navigation={navigation} title="Observer Hub" accentColor="#EA580C" />
+        <Tab.Navigator
+            screenOptions={{
+                headerShown: false,
+                tabBarStyle: styles.tabBar,
+                tabBarActiveTintColor: '#EA580C',
+                tabBarInactiveTintColor: '#94A3B8',
+                tabBarShowLabel: false,
+            }}
+        >
+            <Tab.Screen
+                name="ObserverHome"
+                component={ObserverHomeScreen}
+                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="🏠" label="Home" focused={focused} color={color} /> }}
+            />
+            <Tab.Screen
+                name="Analytics"
+                component={RealTimeView}
+                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="📊" label="Analytics" focused={focused} color={color} /> }}
+            />
+            <Tab.Screen
+                name="Ledger"
+                component={LedgerView}
+                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="⛓️" label="Ledger" focused={focused} color={color} /> }}
+            />
+            <Tab.Screen
+                name="Reports"
+                component={ReportsView}
+                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="📝" label="Reports" focused={focused} color={color} /> }}
+            />
+        </Tab.Navigator>
+    </View>
+);
+
+// ──────────────────────────────
+// ROOT: picks citizen vs observer
+// ──────────────────────────────
+const DashboardScreen = ({ navigation }) => {
+    const { activeAccount } = useAccounts();
+
+    if (!activeAccount) {
+        navigation.replace('Landing');
+        return null;
+    }
+
+    if (activeAccount.appRole === 'observer') {
+        return <ObserverDashboard navigation={navigation} />;
+    }
+    return <CitizenDashboard navigation={navigation} />;
+};
+
 export default DashboardScreen;
+
+const styles = StyleSheet.create({
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 52, paddingBottom: 14, paddingHorizontal: 20 },
+    headerLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.6 },
+    headerName: { color: '#fff', fontSize: 19, fontWeight: '800', maxWidth: 200 },
+    headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    switchPill: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+    switchPillText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+    avatarBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.5)' },
+    avatarText: { color: '#fff', fontSize: 15, fontWeight: '800' },
+    tabBar: { height: 64, paddingTop: 6, paddingBottom: 8, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E2E8F0', elevation: 12, shadowOpacity: 0.08 },
+    tabIcon: { alignItems: 'center', gap: 2 },
+    tabEmoji: { fontSize: 20 },
+    tabLabel: { fontSize: 10, fontWeight: '600' },
+});

@@ -2,6 +2,9 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useFormContext } from '../../context/FormContext';
 import ECILayout from './ECILayout';
+import * as DocumentPicker from 'expo-document-picker';
+import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system/legacy';
 
 const PersonalDetails = ({ nextStep, prevStep }) => {
     const { formData, updateFormData } = useFormContext();
@@ -18,9 +21,39 @@ const PersonalDetails = ({ nextStep, prevStep }) => {
         nextStep();
     };
 
-    const handleMockUpload = () => {
-        updateFormData({ image: { name: 'profile_photo.jpg', base64: 'mock_base64_data' } });
-        Alert.alert('Success', 'Photo attached successfully (Mocked).');
+    const handleFileUpload = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: 'image/*',
+                copyToCacheDirectory: true,
+            });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const asset = result.assets[0];
+                let base64Data = '';
+
+                if (Platform.OS === 'web') {
+                    // For web, we fetch the blob and use FileReader
+                    const response = await fetch(asset.uri);
+                    const blob = await response.blob();
+                    base64Data = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = error => reject(error);
+                        reader.readAsDataURL(blob);
+                    });
+                } else {
+                    // For native, use expo-file-system
+                    const base64 = await FileSystem.readAsStringAsync(asset.uri, { encoding: 'base64' });
+                    base64Data = `data:${asset.mimeType};base64,${base64}`;
+                }
+
+                updateFormData({ image: { name: asset.name, base64: base64Data } });
+            }
+        } catch (error) {
+            console.error("File upload error:", error);
+            Alert.alert('Error', 'Failed to pick document.');
+        }
     };
 
     return (
@@ -48,7 +81,7 @@ const PersonalDetails = ({ nextStep, prevStep }) => {
                 <View className="mt-4">
                     <Text className="text-sm font-semibold text-slate-700 mb-2">Upload Photograph *</Text>
                     <View className="flex-row items-center">
-                        <TouchableOpacity onPress={handleMockUpload} className="bg-slate-200 px-4 py-2 rounded-lg border border-slate-300">
+                        <TouchableOpacity onPress={handleFileUpload} className="bg-slate-200 px-4 py-2 rounded-lg border border-slate-300">
                             <Text className="text-slate-700 font-medium">Choose File</Text>
                         </TouchableOpacity>
                         <Text className="ml-3 text-slate-600 flex-1" numberOfLines={1}>

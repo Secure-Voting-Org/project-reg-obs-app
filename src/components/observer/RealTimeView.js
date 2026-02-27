@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { API_URL } from '../../constants/config';
 
-const RealTimeView = ({ setView }) => {
+const RealTimeView = () => {
     const [stats, setStats] = useState({ totalVotes: 0, breakdown: [] });
     const [loading, setLoading] = useState(true);
 
@@ -35,9 +35,6 @@ const RealTimeView = ({ setView }) => {
             <View className="p-6">
                 <View className="flex-row items-center justify-between mb-6 mt-4">
                     <Text className="text-2xl font-bold text-slate-800">Real-Time Analytics</Text>
-                    <TouchableOpacity onPress={() => setView('hub')} className="bg-slate-200 px-4 py-2 rounded-lg">
-                        <Text className="font-medium text-slate-700">Back</Text>
-                    </TouchableOpacity>
                 </View>
 
                 {loading ? (

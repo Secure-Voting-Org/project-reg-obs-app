@@ -100,7 +100,7 @@ const Declaration = ({ nextStep, prevStep }) => {
                             mode="date"
                             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                             onChange={(event, date) => {
-                                if (Platform.OS === 'android') setShowResidencePicker(false);
+                                if (Platform.OS !== 'ios') setShowResidencePicker(false);
                                 if (event.type === 'dismissed') return;
                                 if (date) {
                                     setResidenceDate(date);

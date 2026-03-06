@@ -38,7 +38,7 @@ const DateOfBirthDetails = ({ nextStep, prevStep }) => {
     };
 
     const onPickerChange = (event, date) => {
-        if (Platform.OS === 'android') {
+        if (Platform.OS !== 'ios') {
             setShowPicker(false);
         }
         if (event.type === 'dismissed') return;

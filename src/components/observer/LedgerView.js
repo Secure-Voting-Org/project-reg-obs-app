@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { API_URL } from '../../constants/config';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 const LedgerView = () => {
     const [blocks, setBlocks] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -9,6 +11,7 @@ const LedgerView = () => {
     useEffect(() => {
         const fetchLedger = async () => {
             try {
+                const token = await AsyncStorage.getItem('observer_token');
                 const endpoint = (API_URL || 'http://localhost:5000') + '/api/public-ledger';
                 const res = await fetch(endpoint);
                 if (res.ok) {

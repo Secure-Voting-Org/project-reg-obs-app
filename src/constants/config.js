@@ -8,7 +8,7 @@ export const BASE_URL = RENDER_URL
     ? RENDER_URL
     : (Platform.OS === 'web'
         ? 'http://localhost:5000'          // Local web browser dev
-        : 'http://10.12.233.152:5000');    // Expo Go on mobile (LAN IP)
+        : 'http://10.23.235.233:5000');    // Expo Go on mobile (LAN IP)
 
 export const API_URL = BASE_URL; // Alias used in LoginScreen.js
 
@@ -24,4 +24,5 @@ export const ENDPOINTS = {
     VOTER_FORGOT_PW: `${BASE_URL}/api/voter/forgot-password`,
     VOTER_VERIFY_OTP: `${BASE_URL}/api/voter/verify-otp`,
     VOTER_RESET_PW: `${BASE_URL}/api/voter/reset-password`,
+    FACE_DETECT: `${BASE_URL}/api/face/detect`,
 };

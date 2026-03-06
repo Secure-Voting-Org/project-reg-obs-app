@@ -1,4 +1,5 @@
 import { ENDPOINTS } from '../constants/config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const authService = {
     loginObserver: async (username, password, role) => {
@@ -8,7 +9,13 @@ export const authService = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password, role }),
             });
-            return await response.json();
+            const data = await response.json();
+
+            // Store token if successful
+            if (data.success && data.token) {
+                await AsyncStorage.setItem('observer_token', data.token);
+            }
+            return data;
         } catch (error) {
             console.error('Observer Login Error:', error);
             return { success: false, error: 'Network request failed' };
@@ -22,7 +29,13 @@ export const authService = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone, password }),
             });
-            return await response.json();
+            const data = await response.json();
+
+            // Store token if successful
+            if (data.success && data.token) {
+                await AsyncStorage.setItem('voter_token', data.token);
+            }
+            return data;
         } catch (error) {
             console.error('Voter Login Error:', error);
             return { success: false, error: 'Network request failed' };

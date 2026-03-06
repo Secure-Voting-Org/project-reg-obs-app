@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert, Clipboard } from 'react-native';
 import { useFormContext } from '../../context/FormContext';
 import { API_URL } from '../../constants/config'; // Assuming we have config, if not fallback to localhost
 
@@ -8,6 +8,7 @@ const Success = ({ finishForm }) => {
     const [referenceId, setReferenceId] = useState(null);
     const [status, setStatus] = useState('Submitting Application...');
     const [error, setError] = useState(null);
+    const [copied, setCopied] = useState(false);
     const hasSubmitted = useRef(false);
 
     useEffect(() => {
@@ -132,7 +133,19 @@ const Success = ({ finishForm }) => {
 
                     <View className="bg-blue-50 p-4 rounded-xl w-full items-center border border-blue-100 mb-8">
                         <Text className="text-xs text-blue-600 font-bold uppercase tracking-wider mb-1">Reference ID</Text>
-                        <Text className="text-3xl font-mono font-bold text-blue-900 tracking-widest">{referenceId}</Text>
+                        <Text className="text-3xl font-mono font-bold text-blue-900 tracking-widest mb-3">{referenceId}</Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                Clipboard.setString(referenceId);
+                                setCopied(true);
+                                setTimeout(() => setCopied(false), 2000);
+                            }}
+                            className={`px-4 py-2 rounded-lg flex-row items-center gap-2 ${copied ? 'bg-green-500' : 'bg-blue-600'}`}
+                        >
+                            <Text className="text-white font-bold text-sm">
+                                {copied ? '✓ Copied!' : '⎘ Copy ID'}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
 
                     <TouchableOpacity onPress={finishForm} className="bg-blue-600 px-6 py-4 rounded-2xl w-full items-center shadow-lg">

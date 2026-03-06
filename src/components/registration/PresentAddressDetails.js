@@ -1,21 +1,21 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useFormContext } from '../../context/FormContext';
 import ECILayout from './ECILayout';
 import SelectDropdown from '../common/SelectDropdown';
 import { locationData } from '../../data/locationData';
 import * as DocumentPicker from 'expo-document-picker';
-import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 
-const AddressField = ({ label, value, onChangeText, required = false }) => (
+const AddressField = ({ label, value, onChangeText, required = false, keyboardType = 'default' }) => (
     <View className="mb-4">
-        <Text className="text-sm font-semibold text-slate-700 mb-1">
-            {label} {required && <Text className="text-red-500">*</Text>}
+        <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6 }}>
+            {label} {required && <Text style={{ color: '#ef4444' }}>*</Text>}
         </Text>
         <TextInput
             value={value}
             onChangeText={onChangeText}
+            keyboardType={keyboardType}
             className="w-full border border-slate-300 rounded-lg px-3 py-3 text-slate-800 bg-white"
         />
     </View>
@@ -33,7 +33,7 @@ const PresentAddressDetails = ({ nextStep, prevStep }) => {
         const requiredFields = ['houseNo', 'streetClass', 'village', 'postOffice', 'pinCode', 'tehsil', 'addressState', 'addressDistrict'];
         for (const field of requiredFields) {
             if (!formData[field]) {
-                Alert.alert('Error', `Please fill all required address fields.`);
+                Alert.alert('Error', 'Please fill all required address fields.');
                 return;
             }
         }
@@ -41,7 +41,6 @@ const PresentAddressDetails = ({ nextStep, prevStep }) => {
             Alert.alert('Error', 'Please upload a document for proof of residence.');
             return;
         }
-
         const fullAddress = `${formData.houseNo}, ${formData.streetClass}, ${formData.village}, ${formData.postOffice}, ${formData.tehsil}, ${formData.addressDistrict}, ${formData.addressState} - ${formData.pinCode}`;
         updateFormData({ address: fullAddress });
         nextStep();
@@ -53,29 +52,26 @@ const PresentAddressDetails = ({ nextStep, prevStep }) => {
                 type: ['application/pdf', 'image/*'],
                 copyToCacheDirectory: true,
             });
-
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const asset = result.assets[0];
                 let base64Data = '';
-
                 if (Platform.OS === 'web') {
                     const response = await fetch(asset.uri);
                     const blob = await response.blob();
                     base64Data = await new Promise((resolve, reject) => {
                         const reader = new FileReader();
                         reader.onload = () => resolve(reader.result);
-                        reader.onerror = error => reject(error);
+                        reader.onerror = (error) => reject(error);
                         reader.readAsDataURL(blob);
                     });
                 } else {
                     const base64 = await FileSystem.readAsStringAsync(asset.uri, { encoding: 'base64' });
                     base64Data = `data:${asset.mimeType};base64,${base64}`;
                 }
-
                 updateFormData({ addressProofFile: { name: asset.name, base64: base64Data } });
             }
         } catch (error) {
-            console.error("File upload error:", error);
+            console.error('File upload error:', error);
             Alert.alert('Error', 'Failed to pick document.');
         }
     };
@@ -83,13 +79,15 @@ const PresentAddressDetails = ({ nextStep, prevStep }) => {
     return (
         <ECILayout step={8} totalSteps={14} title="H. Present Address Details" onClose={prevStep}>
             <View className="gap-4">
-                <Text className="text-sm font-bold text-slate-800 mb-2">8(a) Present Ordinary Residence (Full Address)</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#1e293b', marginBottom: 8 }}>
+                    8(a) Present Ordinary Residence <Text style={{ color: '#ef4444' }}>*</Text>
+                </Text>
 
                 <AddressField label="House/Building/Apartment No" value={formData.houseNo} onChangeText={(val) => updateFormData({ houseNo: val })} required />
                 <AddressField label="Street/Area/Locality/Road" value={formData.streetClass} onChangeText={(val) => updateFormData({ streetClass: val })} required />
                 <AddressField label="Village/Town" value={formData.village} onChangeText={(val) => updateFormData({ village: val })} required />
                 <AddressField label="Post Office" value={formData.postOffice} onChangeText={(val) => updateFormData({ postOffice: val })} required />
-                <AddressField label="PIN Code" value={formData.pinCode} onChangeText={(val) => updateFormData({ pinCode: val })} required />
+                <AddressField label="PIN Code" value={formData.pinCode} onChangeText={(val) => updateFormData({ pinCode: val })} required keyboardType="numeric" />
                 <AddressField label="Tehsil/Taluqa/Mandal" value={formData.tehsil} onChangeText={(val) => updateFormData({ tehsil: val })} required />
 
                 <SelectDropdown
@@ -111,7 +109,9 @@ const PresentAddressDetails = ({ nextStep, prevStep }) => {
                     required
                 />
 
-                <Text className="text-sm font-bold text-slate-800 mt-4 mb-2">8(b) Self-attested copy of address proof *</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#1e293b', marginTop: 8, marginBottom: 6 }}>
+                    8(b) Address Proof Document <Text style={{ color: '#ef4444' }}>*</Text>
+                </Text>
                 <View className="border-2 border-dashed border-slate-300 rounded-xl p-6 items-center">
                     <TouchableOpacity onPress={handleFileUpload} className="bg-slate-200 px-4 py-2 rounded-lg mb-2">
                         <Text className="font-medium text-slate-700">Choose File</Text>

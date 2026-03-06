@@ -3,6 +3,31 @@ import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useFormContext } from '../../context/FormContext';
 import ECILayout from './ECILayout';
 
+const RadioButton = ({ label, selected, onPress }) => (
+    <TouchableOpacity
+        onPress={onPress}
+        style={{
+            flexDirection: 'row', alignItems: 'center',
+            paddingVertical: 10, paddingHorizontal: 14,
+            borderRadius: 8, borderWidth: 1.5,
+            borderColor: selected ? '#2563eb' : '#cbd5e1',
+            backgroundColor: selected ? '#eff6ff' : '#f8fafc',
+            marginRight: 10, marginBottom: 8,
+        }}
+    >
+        <View style={{
+            width: 18, height: 18, borderRadius: 9, borderWidth: 2,
+            borderColor: selected ? '#2563eb' : '#94a3b8',
+            alignItems: 'center', justifyContent: 'center', marginRight: 8
+        }}>
+            {selected && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#2563eb' }} />}
+        </View>
+        <Text style={{ color: selected ? '#1d4ed8' : '#475569', fontWeight: selected ? '600' : '400', fontSize: 14 }}>
+            {label}
+        </Text>
+    </TouchableOpacity>
+);
+
 const ContactDetails = ({ nextStep, prevStep }) => {
     const { formData, updateFormData } = useFormContext();
 
@@ -16,58 +41,117 @@ const ContactDetails = ({ nextStep, prevStep }) => {
 
     return (
         <ECILayout step={4} totalSteps={14} title="D. Contact Details" onClose={prevStep}>
-            <View className="gap-4">
+            <View style={{ gap: 16 }}>
+                {/* Mobile */}
                 <View>
-                    <Text className="text-sm font-bold text-slate-800 mb-2">3. Mobile Number</Text>
-                    <View className="flex-row gap-4 mb-2">
-                        <TouchableOpacity onPress={() => updateFormData({ mobileSelf: true, mobileRelative: false })}>
-                            <Text className={`font-medium ${formData.mobileSelf ? 'text-blue-600' : 'text-slate-500'}`}>◉ Self</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => updateFormData({ mobileSelf: false, mobileRelative: true })}>
-                            <Text className={`font-medium ${formData.mobileRelative ? 'text-blue-600' : 'text-slate-500'}`}>◉ Relative</Text>
-                        </TouchableOpacity>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#1e293b', marginBottom: 8 }}>
+                        3. Mobile Number *
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>Whose number is this?</Text>
+                    <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+                        <RadioButton
+                            label="My Own"
+                            selected={formData.mobileSelf === true}
+                            onPress={() => updateFormData({ mobileSelf: true, mobileRelative: false })}
+                        />
+                        <RadioButton
+                            label="Relative's"
+                            selected={formData.mobileRelative === true}
+                            onPress={() => updateFormData({ mobileSelf: false, mobileRelative: true })}
+                        />
                     </View>
-                    <View className="flex-row items-center border border-slate-300 bg-white rounded-lg px-3">
-                        <Text className="text-slate-500 font-bold mr-2">+91 |</Text>
+                    <View style={{
+                        flexDirection: 'row', alignItems: 'center',
+                        borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8,
+                        backgroundColor: '#fff', paddingHorizontal: 12
+                    }}>
+                        <Text style={{ color: '#94a3b8', fontWeight: '700', marginRight: 8 }}>+91 |</Text>
                         <TextInput
                             value={formData.mobileNumber}
                             onChangeText={(text) => updateFormData({ mobileNumber: text })}
                             placeholder="10-digit number"
                             keyboardType="phone-pad"
                             maxLength={10}
-                            className="flex-1 py-3 text-slate-800"
+                            style={{ flex: 1, paddingVertical: 12, color: '#1e293b', fontSize: 15 }}
                         />
                     </View>
+                    {formData.mobileSelf === false && formData.mobileRelative === true && (
+                        <View style={{ marginTop: 8 }}>
+                            <Text style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Relative's mobile number</Text>
+                            <TextInput
+                                value={formData.mobileRelativeNumber}
+                                onChangeText={(text) => updateFormData({ mobileRelativeNumber: text })}
+                                placeholder="Relative's 10-digit number"
+                                keyboardType="phone-pad"
+                                maxLength={10}
+                                style={{
+                                    borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8,
+                                    paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff', color: '#1e293b'
+                                }}
+                            />
+                        </View>
+                    )}
                 </View>
 
+                {/* Email */}
                 <View>
-                    <Text className="text-sm font-bold text-slate-800 mb-2">4. Email ID (Optional)</Text>
-                    <View className="flex-row gap-4 mb-2">
-                        <TouchableOpacity onPress={() => updateFormData({ emailSelf: true, emailRelative: false })}>
-                            <Text className={`font-medium ${formData.emailSelf ? 'text-blue-600' : 'text-slate-500'}`}>◉ Self</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => updateFormData({ emailSelf: false, emailRelative: true })}>
-                            <Text className={`font-medium ${formData.emailRelative ? 'text-blue-600' : 'text-slate-500'}`}>◉ Relative</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <View className="border border-slate-300 bg-white rounded-lg px-3">
-                        <TextInput
-                            value={formData.emailId}
-                            onChangeText={(text) => updateFormData({ emailId: text })}
-                            placeholder="Enter Email Address"
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            className="flex-1 py-3 text-slate-800"
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#1e293b', marginBottom: 8 }}>
+                        4. Email ID (Optional)
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>Whose email is this?</Text>
+                    <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+                        <RadioButton
+                            label="My Own"
+                            selected={formData.emailSelf === true}
+                            onPress={() => updateFormData({ emailSelf: true, emailRelative: false })}
+                        />
+                        <RadioButton
+                            label="Relative's"
+                            selected={formData.emailRelative === true}
+                            onPress={() => updateFormData({ emailSelf: false, emailRelative: true })}
                         />
                     </View>
+                    <TextInput
+                        value={formData.email}
+                        onChangeText={(text) => updateFormData({ email: text })}
+                        placeholder="Enter email address"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        style={{
+                            borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8,
+                            paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff', color: '#1e293b'
+                        }}
+                    />
+                    {formData.emailRelative === true && (
+                        <View style={{ marginTop: 8 }}>
+                            <Text style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Relative's email</Text>
+                            <TextInput
+                                value={formData.emailRelative}
+                                onChangeText={(text) => updateFormData({ emailRelative: text })}
+                                placeholder="Relative's email address"
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                style={{
+                                    borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8,
+                                    paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff', color: '#1e293b'
+                                }}
+                            />
+                        </View>
+                    )}
                 </View>
 
-                <View className="mt-8 flex-row justify-between">
-                    <TouchableOpacity onPress={prevStep} className="border border-blue-600 px-6 py-3 rounded-lg">
-                        <Text className="text-blue-600 font-bold">Previous</Text>
+                <View style={{ marginTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <TouchableOpacity
+                        onPress={prevStep}
+                        style={{ borderWidth: 1.5, borderColor: '#2563eb', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 }}
+                    >
+                        <Text style={{ color: '#2563eb', fontWeight: '700' }}>Previous</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handleNext} className="bg-blue-600 px-6 py-3 rounded-lg">
-                        <Text className="text-white font-bold">Next</Text>
+                    <TouchableOpacity
+                        onPress={handleNext}
+                        style={{ backgroundColor: '#2563eb', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 }}
+                    >
+                        <Text style={{ color: '#fff', fontWeight: '700' }}>Next</Text>
                     </TouchableOpacity>
                 </View>
             </View>

@@ -20,44 +20,81 @@ const RelativesDetails = ({ nextStep, prevStep }) => {
     };
 
     return (
-        <ECILayout step={3} totalSteps={14} title="C. Name and Surname of any one Relative" onClose={prevStep}>
-            <View className="gap-4">
-                <Text className="text-sm font-bold text-slate-800 mb-2">2(a) Relative Type</Text>
-                <View className="flex-row flex-wrap gap-2 mb-4">
-                    {relations.map((type) => (
-                        <TouchableOpacity
-                            key={type}
-                            onPress={() => updateFormData({ relationType: type })}
-                            className={`px-4 py-2 rounded-full border ${formData.relationType === type ? 'bg-blue-100 border-blue-600' : 'bg-slate-50 border-slate-300'}`}
-                        >
-                            <Text className={formData.relationType === type ? 'text-blue-700 font-bold' : 'text-slate-600'}>{type}</Text>
-                        </TouchableOpacity>
-                    ))}
+        <ECILayout step={3} totalSteps={14} title="C. Relative Details" onClose={prevStep}>
+            <View style={{ gap: 16 }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#1e293b', marginBottom: 2 }}>
+                    2(a) Relation Type *
+                </Text>
+                <Text style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Select one</Text>
+
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                    {relations.map((type) => {
+                        const selected = formData.relationType === type;
+                        return (
+                            <TouchableOpacity
+                                key={type}
+                                onPress={() => updateFormData({ relationType: type })}
+                                style={{
+                                    paddingVertical: 8, paddingHorizontal: 16,
+                                    borderRadius: 20, borderWidth: 1.5,
+                                    borderColor: selected ? '#2563eb' : '#cbd5e1',
+                                    backgroundColor: selected ? '#2563eb' : '#f8fafc',
+                                }}
+                            >
+                                <Text style={{
+                                    color: selected ? '#fff' : '#475569',
+                                    fontWeight: selected ? '700' : '400',
+                                    fontSize: 13
+                                }}>
+                                    {type}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
 
                 <View>
-                    <Text className="text-sm font-semibold text-slate-700 mb-1">Relative Name *</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6 }}>
+                        Relative's First Name *
+                    </Text>
                     <TextInput
                         value={formData.relativeName}
                         onChangeText={(text) => updateFormData({ relativeName: text })}
-                        className="w-full border border-slate-300 rounded-lg px-3 py-3 text-slate-800 bg-white"
-                    />
-                </View>
-                <View>
-                    <Text className="text-sm font-semibold text-slate-700 mb-1">Relative Surname (if any)</Text>
-                    <TextInput
-                        value={formData.relativeSurname}
-                        onChangeText={(text) => updateFormData({ relativeSurname: text })}
-                        className="w-full border border-slate-300 rounded-lg px-3 py-3 text-slate-800 bg-white"
+                        placeholder="Enter first name"
+                        style={{
+                            borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8,
+                            paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff', color: '#1e293b'
+                        }}
                     />
                 </View>
 
-                <View className="mt-8 flex-row justify-between">
-                    <TouchableOpacity onPress={prevStep} className="border border-blue-600 px-6 py-3 rounded-lg">
-                        <Text className="text-blue-600 font-bold">Previous</Text>
+                <View>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6 }}>
+                        Relative's Surname (if any)
+                    </Text>
+                    <TextInput
+                        value={formData.relativeSurname}
+                        onChangeText={(text) => updateFormData({ relativeSurname: text })}
+                        placeholder="Enter surname"
+                        style={{
+                            borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8,
+                            paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff', color: '#1e293b'
+                        }}
+                    />
+                </View>
+
+                <View style={{ marginTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <TouchableOpacity
+                        onPress={prevStep}
+                        style={{ borderWidth: 1.5, borderColor: '#2563eb', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 }}
+                    >
+                        <Text style={{ color: '#2563eb', fontWeight: '700' }}>Previous</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handleNext} className="bg-blue-600 px-6 py-3 rounded-lg">
-                        <Text className="text-white font-bold">Next</Text>
+                    <TouchableOpacity
+                        onPress={handleNext}
+                        style={{ backgroundColor: '#2563eb', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 }}
+                    >
+                        <Text style={{ color: '#fff', fontWeight: '700' }}>Next</Text>
                     </TouchableOpacity>
                 </View>
             </View>

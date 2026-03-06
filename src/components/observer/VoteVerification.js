@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { API_URL } from '../../constants/config';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 const VoteVerification = () => {
     const [receiptHash, setReceiptHash] = useState('');
     const [result, setResult] = useState(null);
@@ -19,6 +21,7 @@ const VoteVerification = () => {
         setIsLoading(true);
 
         try {
+            const token = await AsyncStorage.getItem('observer_token');
             const endpoint = (API_URL || 'http://localhost:5000') + '/api/verify-receipt';
             const response = await fetch(endpoint, {
                 method: 'POST',

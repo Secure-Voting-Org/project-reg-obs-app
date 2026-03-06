@@ -6,9 +6,11 @@ const RENDER_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export const BASE_URL = RENDER_URL
     ? RENDER_URL
-    : (Platform.OS === 'web'
-        ? 'http://localhost:5000'          // Local web browser dev
-        : 'http://10.23.235.233:5000');    // Expo Go on mobile (LAN IP)
+    : (process.env.NODE_ENV === 'production'
+        ? 'https://secure-transparent-electronic-voting.onrender.com' // Explicit production fallback
+        : (Platform.OS === 'web'
+            ? 'http://localhost:5000'          // Local web browser dev
+            : 'http://10.23.235.233:5000'));    // Expo Go on mobile (LAN IP)
 
 export const API_URL = BASE_URL; // Alias used in LoginScreen.js
 

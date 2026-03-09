@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useFormContext } from '../../context/FormContext';
 import ECILayout from './ECILayout';
+import { API_URL } from '../../constants/config';
 
 const RadioCard = ({ label, sublabel, selected, onPress }) => (
     <TouchableOpacity
@@ -31,8 +32,80 @@ const RadioCard = ({ label, sublabel, selected, onPress }) => (
     </TouchableOpacity>
 );
 
-const AadhaarDetails = ({ nextStep, prevStep }) => {
+const AadhaarDetails = ({ nextStep, prevStep, cancelForm }) => {
     const { formData, updateFormData } = useFormContext();
+    const [loading, setLoading] = useState(false);
+    const [otpSent, setOtpSent] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [isVerified, setIsVerified] = useState(false);
+
+    const handleSendOTP = async () => {
+        if (!formData.aadhaarNumber || formData.aadhaarNumber.length !== 12) {
+            Alert.alert('Error', 'Please enter a valid 12-digit Aadhaar number.');
+            return;
+        }
+
+        if (!formData.mobileSelf && !formData.mobileRelativeNumber) {
+            Alert.alert('Error', 'Mobile number not found in step 1. Please go back and enter a mobile number.');
+            return;
+        }
+
+        const targetMobile = formData.mobileSelf ? formData.mobileNumber : formData.mobileRelativeNumber;
+
+        setLoading(true);
+        try {
+            const url = (API_URL || 'http://localhost:5000') + '/api/aadhaar/generate-otp';
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    aadhaarNumber: formData.aadhaarNumber,
+                    mobileNumber: targetMobile
+                })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                setOtpSent(true);
+                Alert.alert('OTP Sent', data.message || 'OTP sent to your registered mobile number.');
+            } else {
+                Alert.alert('Error', data.error || 'Failed to send OTP.');
+            }
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Network Error', 'Could not connect to the server.');
+        }
+        setLoading(false);
+    };
+
+    const handleVerifyOTP = async () => {
+        if (!otp || otp.length < 6) {
+            Alert.alert('Error', 'Please enter a valid 6-digit OTP.');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const url = (API_URL || 'http://localhost:5000') + '/api/aadhaar/verify-otp';
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ aadhaarNumber: formData.aadhaarNumber, otp })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                setIsVerified(true);
+                Alert.alert('Success', 'Aadhaar Verified Successfully!');
+            } else {
+                Alert.alert('Error', data.error || 'Invalid OTP.');
+            }
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Network Error', 'Could not connect to the server.');
+        }
+        setLoading(false);
+    };
 
     const handleNext = () => {
         if (!formData.aadhaarOption) {
@@ -44,12 +117,16 @@ const AadhaarDetails = ({ nextStep, prevStep }) => {
                 Alert.alert('Error', 'Please enter a valid 12-digit Aadhaar number.');
                 return;
             }
+            if (!isVerified) {
+                Alert.alert('Verification Required', 'Please verify your Aadhaar with OTP before proceeding.');
+                return;
+            }
         }
         nextStep();
     };
 
     return (
-        <ECILayout step={5} totalSteps={14} title="E. Aadhaar Details" onClose={prevStep}>
+        <ECILayout step={5} totalSteps={14} title="E. Aadhaar Details" onClose={cancelForm}>
             <View style={{ gap: 4 }}>
                 <Text style={{ fontSize: 13, fontWeight: '700', color: '#1e293b', marginBottom: 4 }}>
                     5. Aadhaar Card <Text style={{ color: '#ef4444' }}>*</Text>
@@ -62,7 +139,11 @@ const AadhaarDetails = ({ nextStep, prevStep }) => {
                     label="I have an Aadhaar Number"
                     sublabel="You will be asked to enter it below"
                     selected={formData.aadhaarOption === 'aadhaar'}
-                    onPress={() => updateFormData({ aadhaarOption: 'aadhaar' })}
+                    onPress={() => {
+                        updateFormData({ aadhaarOption: 'aadhaar' });
+                        setIsVerified(false);
+                        setOtpSent(false);
+                    }}
                 />
 
                 {formData.aadhaarOption === 'aadhaar' && (
@@ -72,21 +153,71 @@ const AadhaarDetails = ({ nextStep, prevStep }) => {
                         </Text>
                         <TextInput
                             value={formData.aadhaarNumber}
-                            onChangeText={(text) => updateFormData({ aadhaarNumber: text.replace(/\D/g, '').slice(0, 12) })}
+                            onChangeText={(text) => {
+                                updateFormData({ aadhaarNumber: text.replace(/\D/g, '').slice(0, 12) });
+                                setIsVerified(false);
+                                setOtpSent(false);
+                            }}
                             placeholder="Enter 12-digit Aadhaar Number"
                             keyboardType="number-pad"
                             maxLength={12}
+                            editable={!isVerified}
                             style={{
-                                borderWidth: 1.5, borderColor: '#93c5fd', borderRadius: 8,
+                                borderWidth: 1.5, borderColor: isVerified ? '#16a34a' : '#93c5fd', borderRadius: 8,
                                 paddingHorizontal: 14, paddingVertical: 12,
-                                backgroundColor: '#fff', color: '#1e293b',
-                                fontSize: 16, letterSpacing: 2,
+                                backgroundColor: isVerified ? '#f0fdf4' : '#fff', color: '#1e293b',
+                                fontSize: 16, letterSpacing: 2, opacity: isVerified ? 0.8 : 1
                             }}
                         />
-                        {formData.aadhaarNumber?.length > 0 && (
+                        {formData.aadhaarNumber?.length > 0 && !isVerified && (
                             <Text style={{ fontSize: 11, color: formData.aadhaarNumber.length === 12 ? '#16a34a' : '#64748b', marginTop: 4 }}>
                                 {formData.aadhaarNumber.length}/12 digits
                             </Text>
+                        )}
+
+                        {/* OTP Flow UI */}
+                        {!isVerified && formData.aadhaarNumber?.length === 12 && !otpSent && (
+                            <TouchableOpacity
+                                onPress={handleSendOTP}
+                                disabled={loading}
+                                style={{ marginTop: 12, backgroundColor: '#2563eb', padding: 12, borderRadius: 8, alignItems: 'center' }}
+                            >
+                                {loading ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: 'bold' }}>Verify via OTP</Text>}
+                            </TouchableOpacity>
+                        )}
+
+                        {otpSent && !isVerified && (
+                            <View style={{ marginTop: 16 }}>
+                                <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6 }}>
+                                    Enter OTP <Text style={{ color: '#ef4444' }}>*</Text>
+                                </Text>
+                                <TextInput
+                                    value={otp}
+                                    onChangeText={(text) => setOtp(text.replace(/\D/g, '').slice(0, 6))}
+                                    placeholder="Enter 6-digit OTP"
+                                    keyboardType="number-pad"
+                                    maxLength={6}
+                                    style={{
+                                        borderWidth: 1.5, borderColor: '#93c5fd', borderRadius: 8,
+                                        paddingHorizontal: 14, paddingVertical: 12,
+                                        backgroundColor: '#fff', color: '#1e293b',
+                                        fontSize: 16, letterSpacing: 4, textAlign: 'center'
+                                    }}
+                                />
+                                <TouchableOpacity
+                                    onPress={handleVerifyOTP}
+                                    disabled={loading || otp.length < 6}
+                                    style={{ marginTop: 12, backgroundColor: otp.length === 6 ? '#16a34a' : '#94a3b8', padding: 12, borderRadius: 8, alignItems: 'center' }}
+                                >
+                                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: 'bold' }}>Submit OTP</Text>}
+                                </TouchableOpacity>
+                            </View>
+                        )}
+
+                        {isVerified && (
+                            <View style={{ marginTop: 12, backgroundColor: '#dcfce7', padding: 10, borderRadius: 8, alignItems: 'center' }}>
+                                <Text style={{ color: '#166534', fontWeight: 'bold' }}>✓ Aadhaar Verified Successfully</Text>
+                            </View>
                         )}
                     </View>
                 )}

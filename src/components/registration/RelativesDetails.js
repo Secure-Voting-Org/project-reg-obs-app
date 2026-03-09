@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useFormContext } from '../../context/FormContext';
 import ECILayout from './ECILayout';
 
-const RelativesDetails = ({ nextStep, prevStep }) => {
+const RelativesDetails = ({ nextStep, prevStep, cancelForm }) => {
     const { formData, updateFormData } = useFormContext();
     const relations = ['Father', 'Mother', 'Husband', 'Wife', 'Legal Guardian'];
 
@@ -20,8 +20,8 @@ const RelativesDetails = ({ nextStep, prevStep }) => {
     };
 
     return (
-        <ECILayout step={3} totalSteps={14} title="C. Relative Details" onClose={prevStep}>
-            <View style={{ gap: 16 }}>
+        <ECILayout step={3} totalSteps={14} title="C. Relatives Details" onClose={cancelForm}>
+            <View className="gap-4">
                 <Text style={{ fontSize: 13, fontWeight: '700', color: '#1e293b', marginBottom: 2 }}>
                     2(a) Relation Type *
                 </Text>

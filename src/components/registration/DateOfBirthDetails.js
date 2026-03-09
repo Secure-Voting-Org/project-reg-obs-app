@@ -6,7 +6,7 @@ import ECILayout from './ECILayout';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 
-const DateOfBirthDetails = ({ nextStep, prevStep }) => {
+const DateOfBirthDetails = ({ nextStep, prevStep, cancelForm }) => {
     const { formData, updateFormData } = useFormContext();
     const [showPicker, setShowPicker] = useState(false);
 
@@ -94,7 +94,7 @@ const DateOfBirthDetails = ({ nextStep, prevStep }) => {
     };
 
     return (
-        <ECILayout step={7} totalSteps={14} title="G. Date of Birth Details" onClose={prevStep}>
+        <ECILayout step={7} totalSteps={14} title="G. Date of Birth Details" onClose={cancelForm}>
             <View className="gap-4">
                 {/* DATE PICKER */}
                 <View>

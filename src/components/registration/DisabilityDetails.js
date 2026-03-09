@@ -58,7 +58,7 @@ const RadioButton = ({ label, selected, onPress }) => (
     </TouchableOpacity>
 );
 
-const DisabilityDetails = ({ nextStep, prevStep }) => {
+const DisabilityDetails = ({ nextStep, prevStep, cancelForm }) => {
     const { formData, updateFormData } = useFormContext();
 
     const categories = [
@@ -112,8 +112,8 @@ const DisabilityDetails = ({ nextStep, prevStep }) => {
     const anySelected = Object.values(formData.disabilityCategories || {}).some(Boolean);
 
     return (
-        <ECILayout step={9} totalSteps={14} title="I. Disability Details (Optional)" onClose={prevStep}>
-            <View style={{ gap: 4 }}>
+        <ECILayout step={9} totalSteps={14} title="I. Disability Details" onClose={cancelForm}>
+            <View className="gap-6">
                 <Text style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>
                     This section is optional. Leave all unchecked if not applicable.
                 </Text>

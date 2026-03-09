@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useFormContext } from '../../context/FormContext';
 import ECILayout from './ECILayout';
 
-const GenderDetails = ({ nextStep, prevStep }) => {
+const GenderDetails = ({ nextStep, prevStep, cancelForm }) => {
     const { formData, updateFormData } = useFormContext();
     const genders = [
         { value: 'Male', icon: '♂', color: '#2563eb' },
@@ -20,8 +20,8 @@ const GenderDetails = ({ nextStep, prevStep }) => {
     };
 
     return (
-        <ECILayout step={6} totalSteps={14} title="F. Gender" onClose={prevStep}>
-            <View style={{ gap: 12 }}>
+        <ECILayout step={6} totalSteps={14} title="F. Gender" onClose={cancelForm}>
+            <View style={{ gap: 4 }}>
                 <Text style={{ fontSize: 13, fontWeight: '700', color: '#1e293b', marginBottom: 4 }}>6. Gender *</Text>
                 <Text style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>Select one option below</Text>
 

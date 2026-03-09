@@ -23,7 +23,7 @@ const LoginScreen = ({ navigation, route }) => {
     const [formData, setFormData] = useState({
         fullName: '',
         phone: '',
-        username: '', // For observer
+        mobile_number: '', // For observer
         email: '',
         password: '',
     });
@@ -83,9 +83,9 @@ const LoginScreen = ({ navigation, route }) => {
 
         try {
             const payload = isLoginMode
-                ? { username: formData.phone, password: formData.password, role: observerRole }
+                ? { mobile_number: formData.phone, password: formData.password, role: observerRole }
                 : {
-                    username: formData.phone,
+                    mobile_number: formData.phone,
                     password: formData.password,
                     fullName: formData.fullName,
                     email: formData.email,
@@ -108,7 +108,7 @@ const LoginScreen = ({ navigation, route }) => {
                     return;
                 }
 
-                const userData = { name: res.observer.full_name || res.observer.username, ...res.observer };
+                const userData = { name: res.observer.full_name || res.observer.mobile_number, ...res.observer };
                 await addOrUpdateAccount(userData, 'observer');
                 navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
             } else {

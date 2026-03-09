@@ -6,7 +6,7 @@ import ECILayout from './ECILayout';
 import SelectDropdown from '../common/SelectDropdown';
 import { locationData } from '../../data/locationData';
 
-const Declaration = ({ nextStep, prevStep }) => {
+const Declaration = ({ nextStep, prevStep, cancelForm }) => {
     const { formData, updateFormData } = useFormContext();
     const [currentDate, setCurrentDate] = useState('');
     const [showResidencePicker, setShowResidencePicker] = useState(false);
@@ -45,8 +45,8 @@ const Declaration = ({ nextStep, prevStep }) => {
     };
 
     return (
-        <ECILayout step={11} totalSteps={14} title="K. Declaration" onClose={prevStep}>
-            <View className="gap-4">
+        <ECILayout step={11} totalSteps={14} title="K. Declaration" onClose={cancelForm}>
+            <View className="gap-6">
                 <Text className="text-sm font-medium text-slate-800">I Hereby declare that to the best of my knowledge and belief:</Text>
 
                 <View className="gap-4">

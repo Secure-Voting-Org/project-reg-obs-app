@@ -28,7 +28,7 @@ const RadioButton = ({ label, selected, onPress }) => (
     </TouchableOpacity>
 );
 
-const ContactDetails = ({ nextStep, prevStep }) => {
+const ContactDetails = ({ nextStep, prevStep, cancelForm }) => {
     const { formData, updateFormData } = useFormContext();
 
     const handleNext = () => {
@@ -40,8 +40,8 @@ const ContactDetails = ({ nextStep, prevStep }) => {
     };
 
     return (
-        <ECILayout step={4} totalSteps={14} title="D. Contact Details" onClose={prevStep}>
-            <View style={{ gap: 16 }}>
+        <ECILayout step={4} totalSteps={14} title="D. Contact Details" onClose={cancelForm}>
+            <View className="gap-6">
                 {/* Mobile */}
                 <View>
                     <Text style={{ fontSize: 13, fontWeight: '700', color: '#1e293b', marginBottom: 8 }}>

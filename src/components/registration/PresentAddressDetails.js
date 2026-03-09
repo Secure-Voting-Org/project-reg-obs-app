@@ -21,7 +21,7 @@ const AddressField = ({ label, value, onChangeText, required = false, keyboardTy
     </View>
 );
 
-const PresentAddressDetails = ({ nextStep, prevStep }) => {
+const PresentAddressDetails = ({ nextStep, prevStep, cancelForm }) => {
     const { formData, updateFormData } = useFormContext();
 
     const states = Object.keys(locationData);
@@ -77,7 +77,7 @@ const PresentAddressDetails = ({ nextStep, prevStep }) => {
     };
 
     return (
-        <ECILayout step={8} totalSteps={14} title="H. Present Address Details" onClose={prevStep}>
+        <ECILayout step={8} totalSteps={14} title="H. Present Address Details" onClose={cancelForm}>
             <View className="gap-4">
                 <Text style={{ fontSize: 13, fontWeight: '700', color: '#1e293b', marginBottom: 8 }}>
                     8(a) Present Ordinary Residence <Text style={{ color: '#ef4444' }}>*</Text>

@@ -3,12 +3,12 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { useFormContext } from '../../context/FormContext';
 import ECILayout from './ECILayout';
 
-const FamilyMemberDetails = ({ nextStep, prevStep }) => {
+const FamilyMemberDetails = ({ nextStep, prevStep, cancelForm }) => {
     const { formData, updateFormData } = useFormContext();
 
     return (
-        <ECILayout step={10} totalSteps={14} title="J. Family Member Details (Optional)" onClose={prevStep}>
-            <View className="gap-4">
+        <ECILayout step={10} totalSteps={14} title="J. Family Member Details (Optional)" onClose={cancelForm}>
+            <View style={{ gap: 16 }}>
                 <Text className="text-sm font-bold text-slate-800 mb-2">10. Details of a family member already included in electoral roll</Text>
 
                 <View>

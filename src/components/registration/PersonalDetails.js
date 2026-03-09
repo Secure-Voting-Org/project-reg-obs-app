@@ -6,7 +6,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 
-const PersonalDetails = ({ nextStep, prevStep }) => {
+const PersonalDetails = ({ nextStep, prevStep, cancelForm }) => {
     const { formData, updateFormData } = useFormContext();
 
     const handleNext = () => {
@@ -57,7 +57,7 @@ const PersonalDetails = ({ nextStep, prevStep }) => {
     };
 
     return (
-        <ECILayout step={2} totalSteps={14} title="B. Personal Details" onClose={prevStep}>
+        <ECILayout step={2} totalSteps={14} title="B. Personal Details" onClose={cancelForm}>
             <View className="gap-4">
                 <View>
                     <Text className="text-sm font-semibold text-slate-700 mb-1">First Name followed by Middle Name *</Text>

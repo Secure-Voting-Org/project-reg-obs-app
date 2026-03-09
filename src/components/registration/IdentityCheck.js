@@ -5,7 +5,7 @@ import ECILayout from './ECILayout';
 import SelectDropdown from '../common/SelectDropdown';
 import { locationData } from '../../data/locationData';
 
-const IdentityCheck = ({ nextStep, prevStep }) => {
+const IdentityCheck = ({ nextStep, cancelForm }) => {
     const { formData, updateFormData } = useFormContext();
     const [constituencyType, setConstituencyType] = useState(formData.constituencyType || 'assembly');
 
@@ -27,7 +27,7 @@ const IdentityCheck = ({ nextStep, prevStep }) => {
     };
 
     return (
-        <ECILayout step={1} totalSteps={14} title="A. Select State, District & Constituency" onClose={prevStep}>
+        <ECILayout step={1} totalSteps={14} title="A. Select State, District & Constituency" onClose={cancelForm}>
             <View className="mb-4">
                 <Text className="text-slate-700">To,</Text>
                 <Text className="text-slate-700">The Electoral Registration Officer,</Text>

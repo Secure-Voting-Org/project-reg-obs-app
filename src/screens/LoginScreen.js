@@ -83,9 +83,9 @@ const LoginScreen = ({ navigation, route }) => {
 
         try {
             const payload = isLoginMode
-                ? { username: formData.username, password: formData.password, role: observerRole }
+                ? { username: formData.phone, password: formData.password, role: observerRole }
                 : {
-                    username: formData.username,
+                    username: formData.phone,
                     password: formData.password,
                     fullName: formData.fullName,
                     email: formData.email,
@@ -224,12 +224,12 @@ const LoginScreen = ({ navigation, route }) => {
             handleCitizenSubmit();
         } else {
             if (isLoginMode) {
-                if (!formData.username || !formData.password) {
-                    setUiError('Username and Password are required');
+                if (!formData.phone || !formData.password) {
+                    setUiError('Mobile Number and Password are required');
                     return;
                 }
             } else {
-                if (!formData.fullName || !formData.username || !formData.email || !formData.password) {
+                if (!formData.fullName || !formData.phone || !formData.email || !formData.password) {
                     setUiError('All fields are required');
                     return;
                 }
@@ -354,24 +354,6 @@ const LoginScreen = ({ navigation, route }) => {
                             {/* Standard Form Area */}
                             {forgotPasswordStep === 0 && (
                                 <>
-                                    {/* Observer Sub-Role Toggle */}
-                                    {appRole === 'observer' && (
-                                        <View className="flex-row gap-2 mb-4 justify-center">
-                                            <TouchableOpacity
-                                                onPress={() => setObserverRole('general')}
-                                                className={`px-4 py-2 border rounded-full ${observerRole === 'general' ? 'bg-orange-100 border-orange-400' : 'border-slate-300 bg-white'}`}
-                                            >
-                                                <Text className={`text-sm font-bold ${observerRole === 'general' ? 'text-orange-700' : 'text-slate-500'}`}>General</Text>
-                                            </TouchableOpacity>
-                                            <TouchableOpacity
-                                                onPress={() => setObserverRole('expenditure')}
-                                                className={`px-4 py-2 border rounded-full ${observerRole === 'expenditure' ? 'bg-orange-100 border-orange-400' : 'border-slate-300 bg-white'}`}
-                                            >
-                                                <Text className={`text-sm font-bold ${observerRole === 'expenditure' ? 'text-orange-700' : 'text-slate-500'}`}>Expenditure</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    )}
-
                                     {/* Registration Fields */}
                                     {!isLoginMode && (
                                         <>
@@ -400,15 +382,15 @@ const LoginScreen = ({ navigation, route }) => {
 
                                     {/* Identifier Field */}
                                     <View className="mt-4">
-                                        <Text className="text-sm font-medium text-slate-700 mb-1">{appRole === 'citizen' ? 'Mobile Number' : 'Username'}</Text>
+                                        <Text className="text-sm font-medium text-slate-700 mb-1">Mobile Number</Text>
                                         <TextInput
                                             className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 focus:border-blue-500"
-                                            placeholder={appRole === 'citizen' ? "Enter 10-digit mobile number" : "e.g. observer1"}
-                                            keyboardType={appRole === 'citizen' ? "phone-pad" : "default"}
-                                            maxLength={appRole === 'citizen' ? 10 : 50}
-                                            value={appRole === 'citizen' ? formData.phone : formData.username}
+                                            placeholder="Enter 10-digit mobile number"
+                                            keyboardType="phone-pad"
+                                            maxLength={10}
+                                            value={formData.phone}
                                             autoCapitalize="none"
-                                            onChangeText={(text) => handleChange(appRole === 'citizen' ? 'phone' : 'username', text)}
+                                            onChangeText={(text) => handleChange('phone', text)}
                                         />
                                     </View>
 

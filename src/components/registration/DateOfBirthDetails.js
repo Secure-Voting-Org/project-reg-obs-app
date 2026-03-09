@@ -102,42 +102,73 @@ const DateOfBirthDetails = ({ nextStep, prevStep }) => {
                         7(a) Date of Birth <Text style={{ color: '#ef4444' }}>*</Text>
                     </Text>
 
-                    <TouchableOpacity
-                        onPress={() => setShowPicker(true)}
-                        className="w-full border border-slate-300 rounded-lg px-4 py-4 bg-white flex-row items-center justify-between"
-                    >
-                        <Text className={formData.dob ? 'text-slate-800 text-base font-medium' : 'text-slate-400 text-base'}>
-                            {formData.dob ? formatDisplay(selectedDate) : 'Tap to select date'}
-                        </Text>
-                        <Text className="text-blue-600 font-bold text-sm">📅 PICK DATE</Text>
-                    </TouchableOpacity>
-
-                    {formData.dob && (
-                        <Text className="text-xs text-slate-500 mt-1 ml-1">
-                            Selected: {formatDisplay(selectedDate)}
-                        </Text>
-                    )}
-
-                    {/* Native Date Picker */}
-                    {showPicker && (
-                        <DateTimePicker
-                            value={selectedDate}
-                            mode="date"
-                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                            onChange={onPickerChange}
-                            maximumDate={maxDate}
-                            minimumDate={new Date(1900, 0, 1)}
+                    {Platform.OS === 'web' ? (
+                        <input
+                            type="date"
+                            value={formData.dob || ''}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (val) {
+                                    const [y, m, d] = val.split('-');
+                                    const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+                                    setSelectedDate(date);
+                                    updateFormData({ dob: val });
+                                }
+                            }}
+                            max={formatStorage(maxDate)}
+                            min="1900-01-01"
+                            style={{
+                                width: '100%',
+                                padding: '16px',
+                                borderRadius: '8px',
+                                border: '1px solid #cbd5e1',
+                                fontSize: '16px',
+                                backgroundColor: 'white',
+                                color: '#1e293b',
+                                outline: 'none',
+                                fontFamily: 'inherit'
+                            }}
                         />
-                    )}
+                    ) : (
+                        <>
+                            <TouchableOpacity
+                                onPress={() => setShowPicker(true)}
+                                className="w-full border border-slate-300 rounded-lg px-4 py-4 bg-white flex-row items-center justify-between"
+                            >
+                                <Text className={formData.dob ? 'text-slate-800 text-base font-medium' : 'text-slate-400 text-base'}>
+                                    {formData.dob ? formatDisplay(selectedDate) : 'Tap to select date'}
+                                </Text>
+                                <Text className="text-blue-600 font-bold text-sm">📅 PICK DATE</Text>
+                            </TouchableOpacity>
 
-                    {/* iOS: confirm button to close the spinner */}
-                    {showPicker && Platform.OS === 'ios' && (
-                        <TouchableOpacity
-                            onPress={() => setShowPicker(false)}
-                            className="bg-blue-600 mt-2 py-2 rounded-lg items-center"
-                        >
-                            <Text className="text-white font-bold">Confirm Date</Text>
-                        </TouchableOpacity>
+                            {formData.dob && (
+                                <Text className="text-xs text-slate-500 mt-1 ml-1">
+                                    Selected: {formatDisplay(selectedDate)}
+                                </Text>
+                            )}
+
+                            {/* Native Date Picker */}
+                            {showPicker && (
+                                <DateTimePicker
+                                    value={selectedDate}
+                                    mode="date"
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={onPickerChange}
+                                    maximumDate={maxDate}
+                                    minimumDate={new Date(1900, 0, 1)}
+                                />
+                            )}
+
+                            {/* iOS: confirm button to close the spinner */}
+                            {showPicker && Platform.OS === 'ios' && (
+                                <TouchableOpacity
+                                    onPress={() => setShowPicker(false)}
+                                    className="bg-blue-600 mt-2 py-2 rounded-lg items-center"
+                                >
+                                    <Text className="text-white font-bold">Confirm Date</Text>
+                                </TouchableOpacity>
+                            )}
+                        </>
                     )}
                 </View>
 

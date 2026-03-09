@@ -6,7 +6,8 @@
     "start": "concurrently \"npx tailwindcss -i ./global.css -o ./output.css --watch\" \"expo start\"",
     "android": "concurrently \"npx tailwindcss -i ./global.css -o ./output.css --watch\" \"expo start --android\"",
     "ios": "concurrently \"npx tailwindcss -i ./global.css -o ./output.css --watch\" \"expo start --ios\"",
-    "web": "concurrently \"npx tailwindcss -i ./global.css -o ./output.css --watch\" \"expo start --web\""
+    "web": "concurrently \"npx tailwindcss -i ./global.css -o ./output.css --watch\" \"expo start --web\"",
+    "build": "npx tailwindcss -i ./global.css -o ./output.css && npx expo export --platform web"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

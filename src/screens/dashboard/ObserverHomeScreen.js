@@ -29,15 +29,13 @@ const ObserverHomeScreen = ({ navigation }) => {
 
             <Text style={styles.sectionLabel}>Quick Actions</Text>
 
-            {role === 'general' && (
-                <ActionCard
-                    emoji="📊"
-                    title="Real-Time Analytics"
-                    desc="Monitor voter turnout and polling station statistics live"
-                    accent="#EA580C"
-                    onPress={() => navigation.navigate('Analytics')}
-                />
-            )}
+            <ActionCard
+                emoji="📊"
+                title="View Election Results"
+                desc="Access live tallied results and cryptographic proof"
+                accent="#7C3AED"
+                onPress={() => navigation.navigate('Reports')}
+            />
             <ActionCard
                 emoji="⛓️"
                 title="Public Ledger"
@@ -47,10 +45,10 @@ const ObserverHomeScreen = ({ navigation }) => {
             />
             <ActionCard
                 emoji="📝"
-                title="Reports & Logs"
+                title="Incident Logs"
                 desc="Access detailed statutory reports and incident logs"
-                accent="#7C3AED"
-                onPress={() => navigation.navigate('Reports')}
+                accent="#EA580C"
+                onPress={() => navigation.navigate('Analytics')} // Reusing Analytics for general logs if needed, or keeping it
             />
 
             <Text style={styles.sectionLabel}>System Status</Text>

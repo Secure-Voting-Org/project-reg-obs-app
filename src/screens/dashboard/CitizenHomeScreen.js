@@ -22,8 +22,6 @@ const CitizenHomeScreen = ({ navigation }) => {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.greeting}>Good to see you,</Text>
-            <Text style={styles.name}>{displayName} 👋</Text>
 
             <Text style={styles.sectionLabel}>Voter Services</Text>
 

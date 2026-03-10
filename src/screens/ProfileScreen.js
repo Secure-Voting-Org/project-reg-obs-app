@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     View, Text, TouchableOpacity, ScrollView, Modal,
-    SafeAreaView, StyleSheet, Alert
+    SafeAreaView, StyleSheet, Alert, Platform
 } from 'react-native';
 import { useAccounts } from '../context/AccountContext';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +17,7 @@ const getInitials = (name = '') =>
 const ProfileScreen = ({ navigation }) => {
     const { accounts, activeIndex, activeAccount, switchAccount, removeAccount, clearAll } = useAccounts();
     const [switcherVisible, setSwitcherVisible] = useState(false);
+    const [logoutModal, setLogoutModal] = useState({ visible: false });
 
     if (!activeAccount) {
         navigation.replace('Landing');
@@ -29,24 +30,35 @@ const ProfileScreen = ({ navigation }) => {
     const displayName = user?.name || user?.full_name || user?.username || 'Unknown';
     const displayEmail = user?.email || user?.mobile || '—';
 
+    const performLogout = async () => {
+        const remaining = await removeAccount(activeIndex);
+        if (remaining === 0) {
+            navigation.reset({ index: 0, routes: [{ name: 'Landing' }] });
+        } else {
+            navigation.navigate('Dashboard');
+        }
+    };
+
     const handleLogout = () => {
-        Alert.alert(
-            'Logout',
-            `Log out of ${displayName} (${config.label})?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Logout', style: 'destructive', onPress: async () => {
-                        const remaining = await removeAccount(activeIndex);
-                        if (remaining === 0) {
-                            navigation.reset({ index: 0, routes: [{ name: 'Landing' }] });
-                        } else {
-                            navigation.goBack();
-                        }
-                    }
-                }
-            ]
-        );
+        setLogoutModal({
+            visible: true,
+            title: 'Logout Account',
+            message: `Are you sure you want to log out of ${displayName} (${config.label})?`,
+            onConfirm: performLogout
+        });
+    };
+
+    const handleLogoutAll = () => {
+        const performLogoutAll = async () => {
+            await clearAll();
+            navigation.reset({ index: 0, routes: [{ name: 'Landing' }] });
+        };
+        setLogoutModal({
+            visible: true,
+            title: 'Logout All Accounts',
+            message: 'Are you sure you want to log out of all linked accounts?',
+            onConfirm: performLogoutAll
+        });
     };
 
     const handleSwitchAccount = async (idx) => {
@@ -159,7 +171,49 @@ const ProfileScreen = ({ navigation }) => {
                 <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
                     <Text style={styles.logoutText}>🚪  Logout This Account</Text>
                 </TouchableOpacity>
+
+                {accounts.length > 1 && (
+                    <TouchableOpacity style={[styles.logoutBtn, { marginTop: 12 }]} onPress={handleLogoutAll}>
+                        <Text style={styles.logoutText}>🚪  Logout All Accounts</Text>
+                    </TouchableOpacity>
+                )}
             </ScrollView>
+
+            {/* Custom Logout Modal */}
+            <Modal
+                visible={logoutModal.visible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setLogoutModal({ visible: false })}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalIconContainer}>
+                            <Text style={styles.modalIcon}>🚪</Text>
+                        </View>
+                        <Text style={styles.modalTitle}>{logoutModal.title}</Text>
+                        <Text style={styles.modalMessage}>{logoutModal.message}</Text>
+
+                        <View style={styles.modalActions}>
+                            <TouchableOpacity
+                                style={[styles.modalBtn, styles.modalBtnCancel]}
+                                onPress={() => setLogoutModal({ visible: false })}
+                            >
+                                <Text style={styles.modalBtnCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalBtn, styles.modalBtnConfirm]}
+                                onPress={() => {
+                                    setLogoutModal({ visible: false });
+                                    if (logoutModal.onConfirm) logoutModal.onConfirm();
+                                }}
+                            >
+                                <Text style={styles.modalBtnConfirmText}>Sign Out</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -194,6 +248,20 @@ const styles = StyleSheet.create({
     addAccountText: { color: '#2563EB', fontWeight: '600', fontSize: 14 },
     logoutBtn: { marginHorizontal: 16, marginTop: 24, backgroundColor: '#FEF2F2', borderRadius: 14, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: '#FECACA' },
     logoutText: { color: '#DC2626', fontWeight: '700', fontSize: 15 },
+
+    // Modal Styles
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+    modalContent: { width: '100%', maxWidth: 340, backgroundColor: '#fff', borderRadius: 24, padding: 24, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 20, elevation: 10 },
+    modalIconContainer: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#FEF2F2', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+    modalIcon: { fontSize: 32 },
+    modalTitle: { fontSize: 20, fontWeight: '800', color: '#1E293B', marginBottom: 8, textAlign: 'center' },
+    modalMessage: { fontSize: 15, color: '#64748B', textAlign: 'center', marginBottom: 24, lineHeight: 22 },
+    modalActions: { flexDirection: 'row', gap: 12, width: '100%' },
+    modalBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    modalBtnCancel: { backgroundColor: '#F1F5F9' },
+    modalBtnCancelText: { color: '#475569', fontWeight: '700', fontSize: 15 },
+    modalBtnConfirm: { backgroundColor: '#EF4444' },
+    modalBtnConfirmText: { color: '#fff', fontWeight: '700', fontSize: 15 }
 });
 
 export default ProfileScreen;

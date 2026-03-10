@@ -23,8 +23,6 @@ const ObserverHomeScreen = ({ navigation }) => {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.greeting}>Observer Hub</Text>
-            <Text style={styles.name}>{displayName} 👁️</Text>
             <View style={styles.roleBadge}>
                 <Text style={styles.roleText}>{role.charAt(0).toUpperCase() + role.slice(1)} Observer</Text>
             </View>
@@ -40,15 +38,13 @@ const ObserverHomeScreen = ({ navigation }) => {
                     onPress={() => navigation.navigate('Analytics')}
                 />
             )}
-            {role === 'expenditure' && (
-                <ActionCard
-                    emoji="⛓️"
-                    title="Public Ledger"
-                    desc="Track campaign expenditures and financial logs"
-                    accent="#EA580C"
-                    onPress={() => navigation.navigate('Ledger')}
-                />
-            )}
+            <ActionCard
+                emoji="⛓️"
+                title="Public Ledger"
+                desc="Track campaign expenditures and financial logs"
+                accent="#EA580C"
+                onPress={() => navigation.navigate('Ledger')}
+            />
             <ActionCard
                 emoji="📝"
                 title="Reports & Logs"

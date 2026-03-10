@@ -22,7 +22,7 @@ const RegisterFlow = ({ navigation }) => {
 
     const nextStep = () => setStep(prev => prev + 1);
     const prevStep = () => setStep(prev => prev - 1);
-    const cancelForm = () => navigation.navigate('CitizenHome');
+    const cancelForm = () => navigation.navigate('Dashboard');
     const finishForm = () => navigation.reset({
         index: 0,
         routes: [{ name: 'Dashboard' }],

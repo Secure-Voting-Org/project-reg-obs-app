@@ -39,10 +39,10 @@ const ObserverHomeScreen = ({ navigation }) => {
                 />
             )}
             <ActionCard
-                emoji="⛓️"
-                title="Public Ledger"
-                desc="Track campaign expenditures and financial logs"
-                accent="#EA580C"
+                emoji="🔍"
+                title="Vote Verification"
+                desc="Verify cast vote origin using cryptographic HashID"
+                accent="#10B981"
                 onPress={() => navigation.navigate('Ledger')}
             />
             <ActionCard

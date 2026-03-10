@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BASE_URL } from '../../constants/config';
 
-const ReportsView = () => {
+const ReportsView = ({ navigation }) => {
     const [loading, setLoading] = useState(true);
     const [isPublished, setIsPublished] = useState(false);
     const [results, setResults] = useState([]);
@@ -62,6 +62,9 @@ const ReportsView = () => {
     if (!isPublished) {
         return (
             <View style={styles.centerBox}>
+                <TouchableOpacity onPress={() => navigation?.goBack()} style={styles.backButton}>
+                    <Text style={styles.backButtonText}>← Back</Text>
+                </TouchableOpacity>
                 <Text style={{ fontSize: 50, marginBottom: 16 }}>🔒</Text>
                 <Text style={styles.titleText}>Results Pending Publication</Text>
                 <Text style={styles.subText}>
@@ -74,6 +77,10 @@ const ReportsView = () => {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            <TouchableOpacity onPress={() => navigation?.goBack()} style={[styles.backButton, { marginLeft: 0 }]}>
+                <Text style={styles.backButtonText}>← Back</Text>
+            </TouchableOpacity>
+            
             <View style={styles.header}>
                 <Text style={{ fontSize: 40, marginBottom: 10 }}>🏆</Text>
                 <Text style={styles.titleText}>Official Election Results</Text>
@@ -141,6 +148,8 @@ const styles = StyleSheet.create({
     errorText: { color: '#B91C1C', fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
     titleText: { color: '#0F172A', fontSize: 24, fontWeight: '900', textAlign: 'center', marginBottom: 8 },
     subText: { color: '#64748B', fontSize: 15, textAlign: 'center', lineHeight: 24, paddingHorizontal: 20 },
+    backButton: { alignSelf: 'flex-start', marginBottom: 16, marginTop: 8, marginLeft: 16 },
+    backButtonText: { color: '#2563EB', fontWeight: '700', fontSize: 16 },
     card: { 
         backgroundColor: '#fff', 
         borderRadius: 20, 
@@ -183,3 +192,4 @@ const styles = StyleSheet.create({
 });
 
 export default ReportsView;
+

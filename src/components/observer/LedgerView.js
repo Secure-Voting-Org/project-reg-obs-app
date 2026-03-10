@@ -1,100 +1,154 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert, Keyboard } from 'react-native';
 import { API_URL } from '../../constants/config';
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LedgerView = ({ navigation }) => {
-    const [blocks, setBlocks] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [hashId, setHashId] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [result, setResult] = useState(null); // { found: boolean, data: object }
+    const [hasSearched, setHasSearched] = useState(false);
 
-    useEffect(() => {
-        const fetchLedger = async () => {
-            try {
-                const token = await AsyncStorage.getItem('observer_token');
-                const endpoint = (API_URL || 'http://localhost:5000') + '/api/public-ledger';
-                const res = await fetch(endpoint);
-                if (res.ok) {
-                    const data = await res.json();
-                    setBlocks(data);
+    const handleVerify = async () => {
+        if (!hashId.trim()) {
+            Alert.alert("Error", "Please enter a valid Hash ID");
+            return;
+        }
+
+        Keyboard.dismiss();
+        setLoading(true);
+        setHasSearched(true);
+        setResult(null);
+
+        try {
+            const token = await AsyncStorage.getItem('observer_token');
+            const endpoint = `${API_URL || 'http://localhost:5000'}/api/vote/verify?hash=${encodeURIComponent(hashId.trim())}`;
+
+            const res = await fetch(endpoint, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
-            } catch (err) {
-                console.error("Fetch ledger failed", err);
-            } finally {
-                setLoading(false);
-            }
-        };
+            });
 
-        fetchLedger();
-        const interval = setInterval(fetchLedger, 5000);
-        return () => clearInterval(interval);
-    }, []);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && data.vote) {
+                    setResult({ found: true, data: data.vote });
+                } else {
+                    setResult({ found: false });
+                }
+            } else {
+                setResult({ found: false });
+            }
+        } catch (err) {
+            console.error("Verification failed", err);
+            Alert.alert("Error", "Failed to connect to the verification node.");
+            setHasSearched(false);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <View className="flex-1 bg-slate-50">
-            <View className="p-6 pb-2">
-                <View className="flex-row items-center justify-between mb-4 mt-4">
-                    <TouchableOpacity onPress={() => navigation?.goBack()} className="mr-3">
-                        <Text className="text-blue-600 font-semibold text-base">← Back</Text>
-                    </TouchableOpacity>
-                    <Text className="text-2xl font-bold text-slate-800 flex-1">Public Ledger</Text>
+        <ScrollView className="flex-1 bg-slate-50" keyboardShouldPersistTaps="handled">
+            <View className="p-6 pt-12 pb-12">
+                <TouchableOpacity onPress={() => navigation?.goBack()} className="mb-6">
+                    <Text className="text-blue-600 font-bold text-base">← Back</Text>
+                </TouchableOpacity>
+
+                {/* Header Area */}
+                <View className="mb-8 border-b border-slate-200 pb-5 mt-2">
+                    <Text className="text-emerald-700 text-3xl font-extrabold tracking-tight">Vote Verification</Text>
+                    <Text className="text-blue-900 text-base mt-2 font-medium leading-5">
+                        Enter the cryptographically generated Hash ID to verify its presence on the blockchain.
+                    </Text>
                 </View>
 
-                <View className="bg-green-100 flex-row items-center border border-green-200 self-start px-3 py-1 rounded-lg mb-6 shadow-sm">
-                    <Text className="text-green-800 font-bold text-xs mr-2">🔒 Blockchain Integrity:</Text>
-                    <Text className="text-green-700 font-bold text-xs uppercase tracking-wide">Verified</Text>
-                </View>
-            </View>
+                {/* Search Card */}
+                <View className="bg-white rounded-3xl shadow-sm border border-slate-100 mb-8 overflow-hidden">
+                    <View className="h-1.5 w-full bg-gradient-to-r from-emerald-400 to-emerald-600" />
 
-            {loading ? (
-                <View className="flex-1 items-center justify-center p-10">
-                    <ActivityIndicator size="large" color="#f97316" />
-                    <Text className="text-slate-500 mt-4">Syncing with nodes...</Text>
-                </View>
-            ) : (
-                <ScrollView className="flex-1 px-6">
-                    <View className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-10">
-                        {/* Table Header */}
-                        <View className="bg-slate-50 flex-row p-4 border-b border-slate-200 items-center justify-between">
-                            <Text className="font-bold text-slate-500 flex-1">Block Data</Text>
-                            <Text className="font-bold text-slate-500 text-right w-24">Hash Info</Text>
+                    <View className="p-6 pb-8">
+                        <View className="flex-row items-center mb-6 mt-1">
+                            <Text className="text-2xl mr-3">🔍</Text>
+                            <Text className="text-emerald-900 text-xl font-extrabold flex-1">Hash Verification</Text>
                         </View>
 
-                        {/* Table Body */}
-                        {blocks.length === 0 ? (
-                            <View className="p-8 items-center">
-                                <Text className="text-slate-400">No blocks mined yet.</Text>
-                            </View>
-                        ) : (
-                            blocks.map((block, idx) => (
-                                <View key={idx} className="p-4 border-b border-slate-100 flex-row justify-between items-start">
-                                    <View className="flex-1 mr-4">
-                                        <View className="flex-row items-center mb-1">
-                                            <Text className="font-bold text-slate-800 text-lg mr-2">#{blocks.length - idx}</Text>
-                                            <View className="bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
-                                                <Text className="text-blue-700 text-[10px] uppercase font-bold">{block.constituency}</Text>
-                                            </View>
-                                        </View>
-                                        <Text className="text-slate-500 text-xs mb-2">
-                                            {new Date(block.timestamp).toLocaleTimeString()}
-                                        </Text>
-                                    </View>
+                        <Text className="text-slate-500 text-[11px] font-bold uppercase tracking-widest mb-2 ml-1">Transaction Hash ID</Text>
 
-                                    <View className="w-32 items-end">
-                                        <Text className="text-xs text-slate-400 font-mono mb-1">
-                                            Prev: {block.prev_hash ? block.prev_hash.substring(0, 10) + '...' : 'GENESIS'}
-                                        </Text>
-                                        <Text className="text-xs text-orange-600 font-mono font-bold" numberOfLines={1}>
-                                            {block.transaction_hash ? block.transaction_hash.substring(0, 14) + '...' : 'N/A'}
-                                        </Text>
+                        <View className="flex-row gap-3">
+                            <TextInput
+                                className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-2xl px-5 py-4 text-slate-800 font-mono text-sm shadow-sm"
+                                placeholder="e.g. 5e884898da28047151d0e56f8dc62927"
+                                placeholderTextColor="#94a3b8"
+                                value={hashId}
+                                onChangeText={setHashId}
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                            />
+                        </View>
+
+                        <TouchableOpacity
+                            className={`rounded-2xl py-4 mt-6 shadow-md ${(loading || !hashId.trim()) ? 'bg-slate-400 shadow-none' : 'bg-emerald-600 shadow-emerald-200'}`}
+                            onPress={handleVerify}
+                            disabled={loading || !hashId.trim()}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="white" />
+                            ) : (
+                                <Text className="text-white font-extrabold text-lg text-center tracking-wide">Verify on Blockchain</Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                {/* Results Section */}
+                {hasSearched && !loading && (
+                    <View className="mt-2">
+                        {result?.found ? (
+                            <View className="bg-white rounded-3xl p-6 shadow-sm border border-green-200 overflow-hidden relative">
+                                <View className="border-l-4 border-l-green-500 bg-green-50 rounded-2xl p-5 mb-5 flex-row items-center">
+                                    <View className="bg-green-100 p-2 rounded-full mr-3">
+                                        <Text className="text-xl">✅</Text>
+                                    </View>
+                                    <View className="flex-1">
+                                        <Text className="text-green-800 font-extrabold text-lg">Verification Successful</Text>
+                                        <Text className="text-green-700 font-medium text-xs mt-0.5">Hash exists on the immutable ledger</Text>
                                     </View>
                                 </View>
-                            ))
+
+                                <View className="space-y-4">
+                                    <View className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                                        <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">VOTING CONSTITUENCY</Text>
+                                        <Text className="text-slate-900 font-bold text-lg">{result.data.constituency}</Text>
+                                    </View>
+
+                                    <View className="bg-slate-50 rounded-2xl p-4 border border-slate-100 mt-3">
+                                        <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">TIMESTAMP</Text>
+                                        <Text className="text-slate-700 font-semibold">{new Date(result.data.timestamp).toLocaleString()}</Text>
+                                    </View>
+
+                                    <View className="bg-slate-50 rounded-2xl p-4 border border-slate-100 mt-3">
+                                        <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">VERIFIED HASH</Text>
+                                        <Text className="text-slate-500 font-mono text-[11px] leading-4">{result.data.transaction_hash}</Text>
+                                    </View>
+                                </View>
+                            </View>
+                        ) : (
+                            <View className="bg-red-50 rounded-3xl p-6 shadow-sm border border-red-200 items-center justify-center py-10 flex-col">
+                                <Text className="text-4xl mb-3">⚠️</Text>
+                                <Text className="text-red-800 font-extrabold text-xl mb-1 text-center">Hash Not Found</Text>
+                                <Text className="text-red-600 font-medium text-center leading-5 px-4 text-sm mt-2">
+                                    This Hash ID could not be located on the public ledger. It may be invalid or not yet confirmed.
+                                </Text>
+                            </View>
                         )}
                     </View>
-                </ScrollView>
-            )}
-        </View>
+                )}
+
+                <View className="h-6"></View>
+            </View>
+        </ScrollView>
     );
 };
 

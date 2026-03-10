@@ -6,8 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 // Citizen screens
 import CitizenHomeScreen from './dashboard/CitizenHomeScreen';
-import RegisterScreen from './RegisterScreen';
-import TrackStatusScreen from './TrackStatusScreen';
+import ProfileScreen from './ProfileScreen';
 
 // Observer screens
 import ObserverHomeScreen from './dashboard/ObserverHomeScreen';
@@ -29,9 +28,9 @@ const DashboardHeader = ({ navigation, title, accentColor }) => {
 
     return (
         <LinearGradient colors={[accentColor, accentColor + 'DD']} style={styles.header}>
-            <View>
+            <View style={{ flex: 1, marginRight: 16 }}>
                 <Text style={styles.headerLabel}>Welcome back</Text>
-                <Text style={styles.headerName} numberOfLines={1}>
+                <Text style={styles.headerName}>
                     {user?.name || user?.full_name || user?.username || 'User'}
                 </Text>
             </View>
@@ -47,13 +46,6 @@ const DashboardHeader = ({ navigation, title, accentColor }) => {
                         </Text>
                     </TouchableOpacity>
                 )}
-                {/* Profile avatar */}
-                <TouchableOpacity
-                    style={[styles.avatarBtn, { backgroundColor: 'rgba(255,255,255,0.25)' }]}
-                    onPress={() => navigation.navigate('Profile')}
-                >
-                    <Text style={styles.avatarText}>{initials}</Text>
-                </TouchableOpacity>
             </View>
         </LinearGradient>
     );
@@ -88,14 +80,9 @@ const CitizenDashboard = ({ navigation }) => (
                 options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="🏠" label="Home" focused={focused} color={color} /> }}
             />
             <Tab.Screen
-                name="Register"
-                component={RegisterScreen}
-                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="📝" label="Register" focused={focused} color={color} /> }}
-            />
-            <Tab.Screen
-                name="TrackStatus"
-                component={TrackStatusScreen}
-                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="🔍" label="Track" focused={focused} color={color} /> }}
+                name="Profile"
+                component={ProfileScreen}
+                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="👤" label="Profile" focused={focused} color={color} /> }}
             />
         </Tab.Navigator>
     </View>
@@ -122,19 +109,9 @@ const ObserverDashboard = ({ navigation }) => (
                 options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="🏠" label="Home" focused={focused} color={color} /> }}
             />
             <Tab.Screen
-                name="Analytics"
-                component={RealTimeView}
-                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="📊" label="Analytics" focused={focused} color={color} /> }}
-            />
-            <Tab.Screen
-                name="Ledger"
-                component={LedgerView}
-                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="⛓️" label="Ledger" focused={focused} color={color} /> }}
-            />
-            <Tab.Screen
-                name="Reports"
-                component={ReportsView}
-                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="📝" label="Reports" focused={focused} color={color} /> }}
+                name="Profile"
+                component={ProfileScreen}
+                options={{ tabBarIcon: ({ focused, color }) => <TabIcon emoji="👤" label="Profile" focused={focused} color={color} /> }}
             />
         </Tab.Navigator>
     </View>
@@ -162,7 +139,7 @@ export default DashboardScreen;
 const styles = StyleSheet.create({
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 52, paddingBottom: 14, paddingHorizontal: 20 },
     headerLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.6 },
-    headerName: { color: '#fff', fontSize: 19, fontWeight: '800', maxWidth: 200 },
+    headerName: { color: '#fff', fontSize: 19, fontWeight: '800' },
     headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     switchPill: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
     switchPillText: { color: '#fff', fontSize: 12, fontWeight: '700' },

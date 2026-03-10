@@ -19,6 +19,8 @@ const LoginScreen = ({ navigation, route }) => {
     const [forgotPasswordStep, setForgotPasswordStep] = useState(0); // 0=Off, 1=Email, 2=OTP, 3=New Password
     const [otp, setOtp] = useState('');
     const [newPassword, setNewPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
 
     const [formData, setFormData] = useState({
         fullName: '',
@@ -335,13 +337,21 @@ const LoginScreen = ({ navigation, route }) => {
                                         <View>
                                             <Text className="text-lg font-bold text-slate-800 mb-2">Set New Password</Text>
                                             <Text className="text-slate-500 mb-4">Please create a strong new password.</Text>
-                                            <TextInput
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 focus:border-blue-500 mb-4"
-                                                placeholder="Enter new password"
-                                                secureTextEntry={true}
-                                                value={newPassword}
-                                                onChangeText={setNewPassword}
-                                            />
+                                            <View className="flex-row items-center bg-slate-50 border border-slate-200 rounded-xl mb-4">
+                                                <TextInput
+                                                    className="flex-1 p-4 text-slate-800"
+                                                    placeholder="Enter new password"
+                                                    secureTextEntry={!showNewPassword}
+                                                    value={newPassword}
+                                                    onChangeText={setNewPassword}
+                                                />
+                                                <TouchableOpacity
+                                                    onPress={() => setShowNewPassword(!showNewPassword)}
+                                                    className="px-4 py-4"
+                                                >
+                                                    <Text className="text-slate-400 text-base">{showNewPassword ? '🙈' : '👁️'}</Text>
+                                                </TouchableOpacity>
+                                            </View>
                                             <View className="flex-row gap-3">
                                                 <TouchableOpacity onPress={() => setForgotPasswordStep(0)} className="flex-1 py-4 border border-slate-300 rounded-xl items-center bg-white"><Text className="text-slate-700 font-medium">Cancel</Text></TouchableOpacity>
                                                 <TouchableOpacity onPress={handleResetPassword} disabled={loading} className="flex-1 py-4 bg-blue-600 rounded-xl items-center"><Text className="text-white font-bold">{loading ? 'Saving...' : 'Reset Password'}</Text></TouchableOpacity>
@@ -396,13 +406,21 @@ const LoginScreen = ({ navigation, route }) => {
 
                                     <View className="mt-4">
                                         <Text className="text-sm font-medium text-slate-700 mb-1">Password</Text>
-                                        <TextInput
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 focus:border-blue-500"
-                                            placeholder="Enter your password"
-                                            secureTextEntry={true}
-                                            value={formData.password}
-                                            onChangeText={(text) => handleChange('password', text)}
-                                        />
+                                        <View className="flex-row items-center bg-slate-50 border border-slate-200 rounded-xl">
+                                            <TextInput
+                                                className="flex-1 p-4 text-slate-800"
+                                                placeholder="Enter your password"
+                                                secureTextEntry={!showPassword}
+                                                value={formData.password}
+                                                onChangeText={(text) => handleChange('password', text)}
+                                            />
+                                            <TouchableOpacity
+                                                onPress={() => setShowPassword(!showPassword)}
+                                                className="px-4 py-4"
+                                            >
+                                                <Text className="text-slate-400 text-base">{showPassword ? '🙈' : '👁️'}</Text>
+                                            </TouchableOpacity>
+                                        </View>
                                         {isLoginMode && (
                                             <TouchableOpacity onPress={() => setForgotPasswordStep(1)} className="mt-2 items-end">
                                                 <Text className={`text-sm font-medium ${appRole === 'citizen' ? 'text-blue-600' : 'text-orange-600'}`}>Forgot Password?</Text>

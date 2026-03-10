@@ -9,6 +9,9 @@ import DashboardScreen from './DashboardScreen';
 import RegisterScreen from './RegisterScreen';
 import TrackStatusScreen from './TrackStatusScreen';
 import ProfileScreen from './ProfileScreen';
+import RealTimeView from '../components/observer/RealTimeView';
+import LedgerView from '../components/observer/LedgerView';
+import ReportsView from '../components/observer/ReportsView';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,6 +48,9 @@ const RootNavigator = () => {
                 options={{ headerShown: false, presentation: 'modal' }}
             />
             <Stack.Screen name="TrackStatus" component={TrackStatusScreen} />
+            <Stack.Screen name="Analytics" component={RealTimeView} />
+            <Stack.Screen name="Ledger" component={LedgerView} />
+            <Stack.Screen name="Reports" component={ReportsView} />
         </Stack.Navigator>
     );
 };

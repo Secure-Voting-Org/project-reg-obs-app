@@ -4,7 +4,7 @@ import { API_URL } from '../../constants/config';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const RealTimeView = () => {
+const RealTimeView = ({ navigation }) => {
     const [stats, setStats] = useState({ totalVotes: 0, breakdown: [] });
     const [loading, setLoading] = useState(true);
 
@@ -37,7 +37,10 @@ const RealTimeView = () => {
         <ScrollView className="flex-1 bg-slate-50">
             <View className="p-6">
                 <View className="flex-row items-center justify-between mb-6 mt-4">
-                    <Text className="text-2xl font-bold text-slate-800">Real-Time Analytics</Text>
+                    <TouchableOpacity onPress={() => navigation?.goBack()} className="mr-3">
+                        <Text className="text-blue-600 font-semibold text-base">← Back</Text>
+                    </TouchableOpacity>
+                    <Text className="text-2xl font-bold text-slate-800 flex-1">Real-Time Analytics</Text>
                 </View>
 
                 {loading ? (

@@ -4,7 +4,7 @@ import { API_URL } from '../../constants/config';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LedgerView = () => {
+const LedgerView = ({ navigation }) => {
     const [blocks, setBlocks] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -34,7 +34,10 @@ const LedgerView = () => {
         <View className="flex-1 bg-slate-50">
             <View className="p-6 pb-2">
                 <View className="flex-row items-center justify-between mb-4 mt-4">
-                    <Text className="text-2xl font-bold text-slate-800">Public Ledger</Text>
+                    <TouchableOpacity onPress={() => navigation?.goBack()} className="mr-3">
+                        <Text className="text-blue-600 font-semibold text-base">← Back</Text>
+                    </TouchableOpacity>
+                    <Text className="text-2xl font-bold text-slate-800 flex-1">Public Ledger</Text>
                 </View>
 
                 <View className="bg-green-100 flex-row items-center border border-green-200 self-start px-3 py-1 rounded-lg mb-6 shadow-sm">

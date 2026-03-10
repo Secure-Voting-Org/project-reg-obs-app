@@ -19,7 +19,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.sandeep_sandy123.projectregobsapp"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -28,6 +29,11 @@
     },
     "plugins": [
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "726dd7ab-03de-4385-b326-17c0479103c1"
+      }
+    }
   }
 }

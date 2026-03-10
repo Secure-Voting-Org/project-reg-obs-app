@@ -34,7 +34,7 @@ const ReportsView = ({ navigation }) => {
                 const summaryRes = await fetch(`${BASE_URL}/api/results/summary`);
                 if (summaryRes.ok) {
                     const sumData = await summaryRes.json();
-                    setResults(sumData.partyResults || []);
+                    setResults(sumData.constituencyResults || {}); // Store constituency map instead of party list
                 }
                 setActiveTab('results'); // Default to results if published
             } else {
@@ -206,42 +206,61 @@ const ReportsView = ({ navigation }) => {
                                     <Text className="text-slate-500 font-medium text-center">Live Tally from Secure Ledger</Text>
                                 </View>
 
-                                {Array.isArray(results) && results.length > 0 ? (
-                                    results.map((party, index) => {
-                                        const isWinner = index === 0;
-                                        const voteShare = parseFloat(party.vote_share) || 0;
+                                {Object.keys(results).length > 0 ? (
+                                    Object.entries(results).map(([constituencyName, candidatesMap]) => {
+                                        // candidatesMap is { "CandidateUUID": { count, name, party, symbol } }
+                                        // Sort by vote count descending
+                                        const sortedCandidates = Object.entries(candidatesMap).sort((a, b) => b[1].count - a[1].count);
+                                        const winnerEntry = sortedCandidates[0];
+                                        const totalConstituencyVotes = sortedCandidates.reduce((sum, [, data]) => sum + data.count, 0);
+
+                                        if (!winnerEntry) return null;
                                         
+                                        const winnerData = winnerEntry[1];
+                                        const winnerShare = totalConstituencyVotes > 0 ? ((winnerData.count / totalConstituencyVotes) * 100).toFixed(2) : 0;
+
                                         return (
-                                            <View key={party.party || index} className={`bg-white rounded-3xl p-6 mb-5 border ${isWinner ? 'border-green-500 bg-green-50/30' : 'border-slate-100 shadow-sm'}`}>
-                                                <View className="flex-row justify-between items-center mb-5">
+                                            <View key={constituencyName} className="bg-white rounded-3xl p-6 mb-5 border border-slate-100 shadow-sm">
+                                                <View className="flex-row justify-between items-center mb-5 border-b border-slate-100 pb-4">
                                                     <View className="flex-row items-center gap-3">
-                                                        <View className={`w-8 h-8 rounded-full items-center justify-center ${isWinner ? 'bg-green-600' : 'bg-slate-100'}`}>
-                                                            <Text className={`font-black ${isWinner ? 'text-white' : 'text-slate-400'}`}>{index + 1}</Text>
-                                                        </View>
-                                                        <Text className="text-xl font-black text-slate-900">{party.party || 'Independent'}</Text>
+                                                        <Text className="text-2xl">📍</Text>
+                                                        <Text className="text-xl font-black text-slate-900">{constituencyName}</Text>
                                                     </View>
-                                                    {isWinner && <Text className="text-2xl">🥇</Text>}
                                                 </View>
                                                 
+                                                <View className="bg-green-50 rounded-2xl p-4 border border-green-100 mb-4 flex-row justify-between items-center">
+                                                    <View>
+                                                        <Text className="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-1">Constituency Winner</Text>
+                                                        <Text className="text-lg font-black text-green-900">{winnerData.name}</Text>
+                                                        <Text className="text-xs font-bold text-green-700 opacity-80 mt-0.5">{winnerData.party}</Text>
+                                                    </View>
+                                                    <Text className="text-3xl">🥇</Text>
+                                                </View>
+
                                                 <View className="flex-row justify-between mb-4">
                                                     <View>
-                                                        <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valid Votes</Text>
-                                                        <Text className="text-2xl font-black text-slate-900">{parseInt(party.vote_count || 0).toLocaleString()}</Text>
+                                                        <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Winning Votes</Text>
+                                                        <Text className="text-2xl font-black text-slate-900">{winnerData.count.toLocaleString()}</Text>
                                                     </View>
                                                     <View className="items-end">
                                                         <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vote Share</Text>
-                                                        <Text className={`text-2xl font-black ${isWinner ? 'text-green-600' : 'text-blue-900'}`}>{voteShare}%</Text>
+                                                        <Text className="text-2xl font-black text-green-600">{winnerShare}%</Text>
                                                     </View>
                                                 </View>
                                                 
                                                 <View className="h-3 bg-slate-100 rounded-full overflow-hidden">
                                                     <LinearGradient
-                                                        colors={isWinner ? ['#138808', '#22C55E'] : ['#000080', '#3B82F6']}
+                                                        colors={['#138808', '#22C55E']}
                                                         start={{ x: 0, y: 0 }}
                                                         end={{ x: 1, y: 0 }}
-                                                        style={{ height: '100%', borderRadius: 6, width: `${Math.max(2, voteShare)}%` }}
+                                                        style={{ height: '100%', borderRadius: 6, width: `${Math.max(2, parseFloat(winnerShare))}%` }}
                                                     />
                                                 </View>
+                                                
+                                                {/* Show total votes at bottom */}
+                                                <Text className="text-center text-slate-400 text-xs font-bold mt-4 shrink-0">
+                                                    TOTAL VALID VOTES: {totalConstituencyVotes.toLocaleString()}
+                                                </Text>
                                             </View>
                                         );
                                     })

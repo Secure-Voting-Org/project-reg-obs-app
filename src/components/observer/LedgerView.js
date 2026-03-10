@@ -22,17 +22,20 @@ const LedgerView = ({ navigation }) => {
 
         try {
             const token = await AsyncStorage.getItem('observer_token');
-            const endpoint = `${API_URL || 'http://localhost:5000'}/api/vote/verify?hash=${encodeURIComponent(hashId.trim())}`;
+            const endpoint = `${API_URL || 'http://localhost:5000'}/api/verify-receipt`;
 
             const res = await fetch(endpoint, {
+                method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                body: JSON.stringify({ transactionHash: hashId.trim() })
             });
 
             if (res.ok) {
                 const data = await res.json();
-                if (data.success && data.vote) {
+                if (data.verified && data.vote) {
                     setResult({ found: true, data: data.vote });
                 } else {
                     setResult({ found: false });
